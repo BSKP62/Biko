@@ -468,6 +468,29 @@
       .car-t3 { opacity: 1; transform: translate(980px,258px) scale(-.5,.5); }
       .car-t4 { opacity: 1; transform: translate(110px,296px) scale(-.95,.95); }
     }
+
+    /* ===== SHOWROOM 3D : voiture manipulable (style configurateur) ===== */
+    #showroom {
+      position: relative; overflow: hidden; border-top: 1px solid var(--border);
+      min-height: 88vh;
+      background: radial-gradient(62% 60% at 58% 44%, #2c313a 0%, #15171c 56%, #0a0b0d 100%);
+    }
+    .showroom-canvas-wrap { position: absolute; inset: 0; z-index: 1; }
+    #car3d { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+    #car3d:active { cursor: grabbing; }
+    .showroom-ui { position: relative; z-index: 2; pointer-events: none; padding: 96px 72px; max-width: 560px; }
+    .showroom-ui .section-title span { color: var(--accent); }
+    .showroom-ui .section-title, .showroom-ui .section-sub { text-shadow: 0 2px 20px rgba(0,0,0,.7); }
+    .swatches { display: flex; gap: 12px; margin-top: 26px; pointer-events: auto; }
+    .swatch { width: 34px; height: 34px; border-radius: 50%; border: 2px solid rgba(255,255,255,.25);
+      background: var(--c); cursor: pointer; padding: 0; transition: transform .15s ease, border-color .2s ease, box-shadow .2s ease; }
+    .swatch:hover { transform: scale(1.12); }
+    .swatch.active { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(232,160,32,.28); }
+    .showroom-hint { margin-top: 26px; font-family: 'IBM Plex Mono', monospace; font-size: .62rem;
+      letter-spacing: .14em; text-transform: uppercase; color: var(--muted); display: inline-flex; align-items: center; gap: 9px; }
+    .showroom-hint::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+      box-shadow: 0 0 10px var(--accent); animation: blink 1.4s infinite; }
+    @media (max-width: 960px) { #showroom { min-height: 72vh; } .showroom-ui { padding: 50px 20px; } }
   </style>
 </head>
 <body>
@@ -533,6 +556,25 @@
     <span>Diagnostic OBD-II</span><span>Reprogrammation Stage 1·2·3</span><span>ODIS en ligne</span><span>FAP — EGR — AdBlue</span><span>Contrôle pré-achat</span><span>Groupe VAG</span>
   </div>
 </div>
+
+<!-- SHOWROOM 3D : voiture manipulable -->
+<section id="showroom">
+  <div class="showroom-canvas-wrap"><canvas id="car3d"></canvas></div>
+  <div class="showroom-ui">
+    <div class="section-label">Showroom 3D</div>
+    <h2 class="section-title">Configurez<br><span>en 3D</span></h2>
+    <p class="section-sub">Glissez pour faire pivoter le véhicule. Choisissez la teinte de carrosserie.</p>
+    <div class="swatches">
+      <button class="swatch active" style="--c:#eceff2" data-color="#eceff2" aria-label="Blanc Alpin"></button>
+      <button class="swatch" style="--c:#e8a020" data-color="#e8a020" aria-label="Jaune"></button>
+      <button class="swatch" style="--c:#2f7d54" data-color="#2f7d54" aria-label="Vert"></button>
+      <button class="swatch" style="--c:#b11f24" data-color="#b11f24" aria-label="Rouge"></button>
+      <button class="swatch" style="--c:#2d63a8" data-color="#2d63a8" aria-label="Bleu"></button>
+      <button class="swatch" style="--c:#15181d" data-color="#15181d" aria-label="Noir"></button>
+    </div>
+    <div class="showroom-hint">Glisser pour tourner • cliquer une pastille pour changer de couleur</div>
+  </div>
+</section>
 
 <!-- SERVICES -->
 <section id="services">
@@ -1800,6 +1842,204 @@
   measure(); build();
   if (reduce) { parts.forEach(render); }   // version statique
   else requestAnimationFrame(frame);
+})();
+</script>
+
+<!-- ============================================================= -->
+<!-- SHOWROOM 3D : voiture sport manipulable (Three.js)            -->
+<!-- glisser pour tourner, rotation auto, nuancier de couleurs     -->
+<!-- ============================================================= -->
+<script>
+(function () {
+  var canvas = document.getElementById('car3d');
+  if (!canvas || !window.THREE) { if (canvas) canvas.parentElement.style.display = 'none'; return; }
+  var wrap = canvas.parentElement;
+  var reduce = !document.documentElement.classList.contains('fx-3d');
+
+  var renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+  } catch (e) { wrap.style.display = 'none'; return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.8));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.06;
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+  camera.position.set(0.2, 1.55, 6.4);
+  camera.lookAt(0, 0.62, 0);
+
+  // ---- studio environment (reflections) ----
+  function makeEnv() {
+    var c = document.createElement('canvas'); c.width = 512; c.height = 256;
+    var x = c.getContext('2d');
+    var g = x.createLinearGradient(0, 0, 0, 256);
+    g.addColorStop(0, '#e9eef4'); g.addColorStop(0.42, '#aab4c0');
+    g.addColorStop(0.5, '#ffffff'); g.addColorStop(0.6, '#5d6671');
+    g.addColorStop(1, '#15171b');
+    x.fillStyle = g; x.fillRect(0, 0, 512, 256);
+    // soft light strips
+    x.fillStyle = 'rgba(255,255,255,.9)';
+    x.fillRect(60, 40, 150, 26); x.fillRect(300, 60, 150, 22);
+    var tex = new THREE.CanvasTexture(c);
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    var pmrem = new THREE.PMREMGenerator(renderer);
+    var env = pmrem.fromEquirectangular(tex).texture;
+    tex.dispose(); pmrem.dispose();
+    return env;
+  }
+  scene.environment = makeEnv();
+
+  // ---- lights ----
+  scene.add(new THREE.HemisphereLight(0xbfd3e6, 0x14161a, 0.55));
+  var key = new THREE.DirectionalLight(0xffffff, 2.3);
+  key.position.set(4, 8, 6); key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.camera.near = 1; key.shadow.camera.far = 30;
+  key.shadow.camera.left = -6; key.shadow.camera.right = 6;
+  key.shadow.camera.top = 6; key.shadow.camera.bottom = -6;
+  key.shadow.bias = -0.0004;
+  scene.add(key);
+  var rim = new THREE.DirectionalLight(0xffd9a0, 1.5); rim.position.set(-6, 4, -5); scene.add(rim);
+  var fill = new THREE.DirectionalLight(0x88aaff, 0.5); fill.position.set(-4, 3, 6); scene.add(fill);
+
+  // ---- materials ----
+  var bodyMat = new THREE.MeshPhysicalMaterial({ color: 0xeceff2, metalness: 0.55, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.12, envMapIntensity: 1.2 });
+  var glassMat = new THREE.MeshPhysicalMaterial({ color: 0x0a0d11, metalness: 0.2, roughness: 0.06, envMapIntensity: 1.6 });
+  var tireMat = new THREE.MeshStandardMaterial({ color: 0x0b0b0c, roughness: 0.85, metalness: 0.0 });
+  var rimMat = new THREE.MeshStandardMaterial({ color: 0xd2d6db, metalness: 1.0, roughness: 0.22, envMapIntensity: 1.4 });
+  var headMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff0cf, emissiveIntensity: 1.1, roughness: 0.3 });
+  var tailMat = new THREE.MeshStandardMaterial({ color: 0x3a0a0a, emissive: 0xe1241f, emissiveIntensity: 1.2, roughness: 0.4 });
+  var trimMat = new THREE.MeshStandardMaterial({ color: 0x14161a, metalness: 0.6, roughness: 0.4 });
+
+  // ---- build a stylized sports car ----
+  var offset = new THREE.Group();   // horizontal offset (car to the right on desktop)
+  var spin = new THREE.Group();     // user/auto rotation
+  offset.add(spin); scene.add(offset);
+
+  function buildCar() {
+    var car = new THREE.Group();
+
+    // body (extruded side profile)
+    var pts = [[-2.10,0.30],[-2.18,0.58],[-1.75,0.70],[-1.0,0.78],[-0.45,1.14],[0.5,1.17],[0.98,0.86],[1.7,0.72],[2.16,0.64],[2.22,0.40],[2.08,0.28]];
+    var shape = new THREE.Shape();
+    shape.moveTo(pts[0][0], pts[0][1]);
+    for (var i = 1; i < pts.length; i++) shape.lineTo(pts[i][0], pts[i][1]);
+    shape.lineTo(pts[0][0], pts[0][1]);
+    var bodyGeo = new THREE.ExtrudeGeometry(shape, { depth: 1.86, bevelEnabled: true, bevelThickness: 0.10, bevelSize: 0.10, bevelSegments: 3, steps: 1 });
+    bodyGeo.translate(0, 0, -0.93); bodyGeo.computeVertexNormals();
+    var body = new THREE.Mesh(bodyGeo, bodyMat); body.castShadow = true; car.add(body);
+
+    // greenhouse / glass band
+    var gp = [[-1.5,0.80],[-0.45,1.10],[0.46,1.12],[0.9,0.88]];
+    var gshape = new THREE.Shape();
+    gshape.moveTo(gp[0][0], gp[0][1]);
+    for (var j = 1; j < gp.length; j++) gshape.lineTo(gp[j][0], gp[j][1]);
+    gshape.lineTo(gp[0][0], gp[0][1]);
+    var glassGeo = new THREE.ExtrudeGeometry(gshape, { depth: 1.72, bevelEnabled: false, steps: 1 });
+    glassGeo.translate(0, 0.02, -0.86);
+    car.add(new THREE.Mesh(glassGeo, glassMat));
+
+    // wheels
+    function wheel(x, z) {
+      var w = new THREE.Group();
+      var tire = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.46, 0.30, 28), tireMat);
+      tire.rotation.x = Math.PI / 2; tire.castShadow = true; w.add(tire);
+      var rimd = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.31, 0.33, 20), rimMat);
+      rimd.rotation.x = Math.PI / 2; w.add(rimd);
+      // simple spokes
+      for (var s = 0; s < 5; s++) {
+        var sp = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.07, 0.05), rimMat);
+        sp.rotation.z = (s / 5) * Math.PI * 2; w.add(sp);
+      }
+      var hub = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.35, 12), trimMat);
+      hub.rotation.x = Math.PI / 2; w.add(hub);
+      w.position.set(x, 0.46, z); return w;
+    }
+    car.add(wheel(1.30, 0.95), wheel(1.30, -0.95), wheel(-1.34, 0.95), wheel(-1.34, -0.95));
+
+    // lights + details
+    var hlGeo = new THREE.BoxGeometry(0.10, 0.13, 0.42);
+    var hlL = new THREE.Mesh(hlGeo, headMat); hlL.position.set(2.13, 0.62, 0.6); car.add(hlL);
+    var hlR = new THREE.Mesh(hlGeo, headMat); hlR.position.set(2.13, 0.62, -0.6); car.add(hlR);
+    var tl = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.12, 1.5), tailMat); tl.position.set(-2.17, 0.62, 0); car.add(tl);
+    // splitter + rear spoiler
+    var splitter = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.06, 1.85), trimMat); splitter.position.set(2.0, 0.26, 0); car.add(splitter);
+    var spoiler = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 1.78), bodyMat); spoiler.position.set(-1.78, 0.94, 0); spoiler.castShadow = true; car.add(spoiler);
+    var sideSkirt = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.08, 0.06), trimMat);
+    var ssL = sideSkirt.clone(); ssL.position.set(0, 0.30, 0.95); car.add(ssL);
+    var ssR = sideSkirt.clone(); ssR.position.set(0, 0.30, -0.95); car.add(ssR);
+
+    return car;
+  }
+  var car = buildCar();
+  spin.add(car);
+
+  // ---- ground : contact shadow + turntable ----
+  var ground = new THREE.Mesh(new THREE.CircleGeometry(7, 48), new THREE.ShadowMaterial({ opacity: 0.38 }));
+  ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+  var disc = new THREE.Mesh(new THREE.CircleGeometry(3.4, 64),
+    new THREE.MeshStandardMaterial({ color: 0x1a1d22, metalness: 0.4, roughness: 0.5, envMapIntensity: 0.6 }));
+  disc.rotation.x = -Math.PI / 2; disc.position.y = -0.001; disc.receiveShadow = true; scene.add(disc);
+  var ring = new THREE.Mesh(new THREE.RingGeometry(3.3, 3.42, 64),
+    new THREE.MeshBasicMaterial({ color: 0xe8a020 }));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.002; scene.add(ring);
+
+  // ---- sizing ----
+  function resize() {
+    var w = Math.max(wrap.clientWidth, 1), h = Math.max(wrap.clientHeight, 1);
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+    offset.position.x = (w > 900) ? 1.2 : 0;   // shift car right so the text breathes
+  }
+  resize();
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(wrap);
+  else window.addEventListener('resize', resize);
+
+  // ---- drag to rotate (+ inertia, auto-spin) ----
+  var dragging = false, lastX = 0, lastY = 0;
+  var targetRotY = -0.5, targetRotX = 0.08, curRotY = -0.5, curRotX = 0.08;
+  canvas.addEventListener('pointerdown', function (e) { dragging = true; lastX = e.clientX; lastY = e.clientY; try { canvas.setPointerCapture(e.pointerId); } catch (err) {} });
+  canvas.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    targetRotY += (e.clientX - lastX) * 0.008;
+    targetRotX += (e.clientY - lastY) * 0.005;
+    targetRotX = Math.max(-0.25, Math.min(0.5, targetRotX));
+    lastX = e.clientX; lastY = e.clientY;
+  });
+  function endDrag() { dragging = false; }
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+
+  // ---- colour swatches ----
+  document.querySelectorAll('#showroom .swatch').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      bodyMat.color.set(btn.getAttribute('data-color'));
+      document.querySelectorAll('#showroom .swatch').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+    });
+  });
+
+  // ---- render only when visible ----
+  var inView = true;
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (en) { inView = en[0].isIntersecting; }, { threshold: 0.02 })
+      .observe(document.getElementById('showroom'));
+  }
+
+  function frame() {
+    requestAnimationFrame(frame);
+    if (!inView) return;
+    if (!dragging && !reduce) targetRotY += 0.0035;   // rotation auto au repos
+    curRotY += (targetRotY - curRotY) * 0.08;
+    curRotX += (targetRotX - curRotX) * 0.08;
+    spin.rotation.y = curRotY; spin.rotation.x = curRotX;
+    renderer.render(scene, camera);
+  }
+  frame();
 })();
 </script>
 
