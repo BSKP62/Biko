@@ -401,11 +401,11 @@
     /* ===== ATELIER MÉCANIQUE : voitures entrant dans le garage (arrière-plan animé) ===== */
     #atelier {
       position: relative; overflow: hidden; border-top: 1px solid var(--border);
-      min-height: 560px; padding: 110px 72px;
+      min-height: 580px; padding: 110px 72px;
       background:
-        radial-gradient(75% 55% at 50% 8%, rgba(232,160,32,.12), transparent 60%),
-        radial-gradient(60% 50% at 85% 90%, rgba(79,195,247,.07), transparent 60%),
-        linear-gradient(180deg, #181b21 0%, #1c2128 46%, #0f1115 100%);
+        radial-gradient(85% 65% at 50% 0%, rgba(232,160,32,.22), transparent 62%),
+        radial-gradient(55% 45% at 88% 92%, rgba(79,195,247,.10), transparent 60%),
+        linear-gradient(180deg, #313842 0%, #262c34 44%, #1a1e24 100%);
     }
     .garage-scene { position: absolute; inset: 0; z-index: 1; }
     .garage-svg { width: 100%; height: 100%; display: block; }
@@ -413,10 +413,11 @@
     .garage-scene::after {
       content: ''; position: absolute; inset: 0; pointer-events: none;
       background:
-        linear-gradient(90deg, rgba(8,8,9,.94) 0%, rgba(8,8,9,.6) 34%, rgba(8,8,9,.05) 62%, rgba(8,8,9,0) 82%),
-        linear-gradient(0deg, rgba(8,8,9,.65) 0%, rgba(8,8,9,0) 32%);
+        linear-gradient(90deg, rgba(12,13,16,.72) 0%, rgba(12,13,16,.35) 30%, rgba(12,13,16,0) 56%),
+        linear-gradient(0deg, rgba(12,13,16,.5) 0%, rgba(12,13,16,0) 28%);
     }
     .garage-overlay { position: relative; z-index: 2; pointer-events: none; max-width: 560px; }
+    .garage-overlay .section-title, .garage-overlay .section-sub { text-shadow: 0 2px 18px rgba(0,0,0,.8); }
 
     /* roues qui tournent */
     .garage-svg .wheel { transform-box: fill-box; transform-origin: 50% 50%; animation: gspin .55s linear infinite; }
@@ -425,15 +426,22 @@
     /* voitures : circulation continue (plans de profondeur + 2 sens) + 1 qui se gare */
     .garage-svg .car { transform-box: fill-box; transform-origin: 50% 50%; will-change: transform, opacity; }
 
-    /* voiture qui rentre dans la baie centrale et se gare */
-    .car-a { opacity: 1; transform: translate(470px,283px) scale(-1,1); animation: driveA 18s ease-in-out infinite; }
+    /* couleurs de marque (le corps utilise currentColor) */
+    .car-a  { color: #c2c7cc; }  /* Mercedes-AMG — argent */
+    .car-t1 { color: #b6f23a; }  /* Lamborghini — vert Verde */
+    .car-t2 { color: #aab0b6; }  /* Audi R8 — gris Nardo */
+    .car-t3 { color: #d83a2f; }  /* Porsche 911 — rouge Guards */
+    .car-t4 { color: #f5c518; }  /* Lamborghini — jaune */
+
+    /* voiture qui rentre dans la baie centrale et se gare (Mercedes) */
+    .car-a { opacity: 1; transform: translate(470px,290px) scale(-1,1); animation: driveA 18s ease-in-out infinite; }
     @keyframes driveA {
-      0%   { transform: translate(1320px,283px) scale(-1,1);   opacity: 0; }
+      0%   { transform: translate(1320px,290px) scale(-1,1);   opacity: 0; }
       5%   { opacity: 1; }
-      34%  { transform: translate(470px,283px)  scale(-1,1);   opacity: 1; }
-      46%  { transform: translate(470px,283px)  scale(-1,1);   opacity: 1; }
-      64%  { transform: translate(505px,250px)  scale(-.5,.5); opacity: 0; }
-      100% { transform: translate(505px,250px)  scale(-.5,.5); opacity: 0; }
+      34%  { transform: translate(470px,290px)  scale(-1,1);   opacity: 1; }
+      46%  { transform: translate(470px,290px)  scale(-1,1);   opacity: 1; }
+      64%  { transform: translate(505px,258px)  scale(-.5,.5); opacity: 0; }
+      100% { transform: translate(505px,258px)  scale(-.5,.5); opacity: 0; }
     }
 
     /* trafic en boucle — vitesses, tailles (profondeur) et sens variés */
@@ -441,10 +449,10 @@
     .car-t2 { animation: t2 13s linear infinite 3s; }    /* plan moyen, vers la droite */
     .car-t3 { animation: t3 6.5s linear infinite 1s; }   /* arrière-plan rapide, vers la gauche */
     .car-t4 { animation: t4 15s linear infinite 6s; }    /* avant-plan, vers la gauche */
-    @keyframes t1 { from { transform: translate(1320px,302px) scale(-1,1); }    to { transform: translate(-300px,302px) scale(-1,1); } }
-    @keyframes t2 { from { transform: translate(-320px,316px) scale(.82,.82); } to { transform: translate(1320px,316px) scale(.82,.82); } }
-    @keyframes t3 { from { transform: translate(1300px,250px) scale(-.5,.5); }  to { transform: translate(-220px,250px) scale(-.5,.5); } }
-    @keyframes t4 { from { transform: translate(1340px,309px) scale(-.95,.95); } to { transform: translate(-300px,309px) scale(-.95,.95); } }
+    @keyframes t1 { from { transform: translate(1320px,292px) scale(-1,1); }    to { transform: translate(-320px,292px) scale(-1,1); } }
+    @keyframes t2 { from { transform: translate(-340px,286px) scale(.82,.82); } to { transform: translate(1340px,286px) scale(.82,.82); } }
+    @keyframes t3 { from { transform: translate(1300px,258px) scale(-.5,.5); }  to { transform: translate(-240px,258px) scale(-.5,.5); } }
+    @keyframes t4 { from { transform: translate(1360px,296px) scale(-.95,.95); } to { transform: translate(-320px,296px) scale(-.95,.95); } }
     /* lampes d'atelier qui vacillent */
     .garage-svg .lamp { animation: lampFlick 5s ease-in-out infinite; }
     .garage-svg .lamp-b { animation-delay: 1.6s; }
@@ -454,11 +462,11 @@
     @media (max-width: 960px) { #atelier { padding: 64px 20px; min-height: 440px; } }
     @media (prefers-reduced-motion: reduce) {
       .garage-svg .wheel, .garage-svg .car, .garage-svg .lamp { animation: none !important; }
-      .car-a  { opacity: 1; transform: translate(470px,283px) scale(-1,1); }
-      .car-t1 { opacity: 1; transform: translate(300px,302px) scale(-1,1); }
-      .car-t2 { opacity: 1; transform: translate(720px,316px) scale(.82,.82); }
-      .car-t3 { opacity: 1; transform: translate(980px,250px) scale(-.5,.5); }
-      .car-t4 { opacity: 1; transform: translate(110px,309px) scale(-.95,.95); }
+      .car-a  { opacity: 1; transform: translate(470px,290px) scale(-1,1); }
+      .car-t1 { opacity: 1; transform: translate(300px,292px) scale(-1,1); }
+      .car-t2 { opacity: 1; transform: translate(720px,286px) scale(.82,.82); }
+      .car-t3 { opacity: 1; transform: translate(980px,258px) scale(-.5,.5); }
+      .car-t4 { opacity: 1; transform: translate(110px,296px) scale(-.95,.95); }
     }
   </style>
 </head>
@@ -944,183 +952,204 @@
     <svg class="garage-svg" viewBox="0 0 1200 440" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="gWall" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#1a1d22"/><stop offset="1" stop-color="#101216"/>
+          <stop offset="0" stop-color="#3c444e"/><stop offset="1" stop-color="#252b32"/>
         </linearGradient>
         <linearGradient id="gFloor" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#15171a"/><stop offset="1" stop-color="#0a0b0c"/>
+          <stop offset="0" stop-color="#2d333b"/><stop offset="1" stop-color="#171b20"/>
         </linearGradient>
-        <radialGradient id="gBay" cx="50%" cy="35%" r="75%">
-          <stop offset="0" stop-color="#23262b"/><stop offset="1" stop-color="#08090b"/>
+        <radialGradient id="gBay" cx="50%" cy="32%" r="78%">
+          <stop offset="0" stop-color="#343b44"/><stop offset="1" stop-color="#11141a"/>
         </radialGradient>
+        <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="rgba(220,232,245,.85)"/><stop offset="1" stop-color="rgba(150,170,190,.15)"/>
+        </linearGradient>
         <radialGradient id="gLamp" cx="50%" cy="0%" r="100%">
-          <stop offset="0" stop-color="rgba(255,224,150,.55)"/><stop offset="1" stop-color="rgba(255,224,150,0)"/>
+          <stop offset="0" stop-color="rgba(255,228,160,.6)"/><stop offset="1" stop-color="rgba(255,228,160,0)"/>
         </radialGradient>
-        <linearGradient id="gCarA" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#f3ad33"/><stop offset="1" stop-color="#d86a16"/>
-        </linearGradient>
-        <linearGradient id="gCarB" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#5e7486"/><stop offset="1" stop-color="#2c3742"/>
-        </linearGradient>
-        <linearGradient id="gCarC" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#d6dadf"/><stop offset="1" stop-color="#8b9197"/>
-        </linearGradient>
-        <linearGradient id="gCarD" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#e0564f"/><stop offset="1" stop-color="#9c2b27"/>
+        <linearGradient id="gGlass" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#1a2530"/><stop offset="1" stop-color="#0b1016"/>
         </linearGradient>
         <linearGradient id="gBeam" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="rgba(255,231,168,.5)"/><stop offset="1" stop-color="rgba(255,231,168,0)"/>
+          <stop offset="0" stop-color="rgba(255,231,168,.55)"/><stop offset="1" stop-color="rgba(255,231,168,0)"/>
         </linearGradient>
-        <radialGradient id="gAmbient" cx="50%" cy="16%" r="72%">
-          <stop offset="0" stop-color="rgba(232,160,32,.14)"/><stop offset="1" stop-color="rgba(232,160,32,0)"/>
+        <linearGradient id="gSheen" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="rgba(255,255,255,.10)"/><stop offset="1" stop-color="rgba(255,255,255,0)"/>
+        </linearGradient>
+        <radialGradient id="gAmbient" cx="50%" cy="12%" r="75%">
+          <stop offset="0" stop-color="rgba(232,160,32,.20)"/><stop offset="1" stop-color="rgba(232,160,32,0)"/>
         </radialGradient>
       </defs>
 
       <!-- back wall + ceiling -->
-      <rect x="0" y="40" width="1200" height="320" fill="url(#gWall)"/>
+      <rect x="0" y="40" width="1200" height="322" fill="url(#gWall)"/>
+      <!-- skylight panels (bright) -->
+      <rect x="0" y="40" width="1200" height="26" fill="#3f4853"/>
+      <g>
+        <rect x="120" y="43" width="170" height="20" rx="2" fill="url(#gSky)"/>
+        <rect x="515" y="43" width="170" height="20" rx="2" fill="url(#gSky)"/>
+        <rect x="910" y="43" width="170" height="20" rx="2" fill="url(#gSky)"/>
+        <!-- light shafts -->
+        <path d="M120 63 L205 63 L250 360 L150 360 Z" fill="url(#gSky)" opacity=".06"/>
+        <path d="M515 63 L600 63 L645 360 L545 360 Z" fill="url(#gSky)" opacity=".06"/>
+        <path d="M910 63 L995 63 L1040 360 L940 360 Z" fill="url(#gSky)" opacity=".06"/>
+      </g>
       <rect x="0" y="40" width="1200" height="400" fill="url(#gAmbient)"/>
-      <rect x="0" y="40" width="1200" height="30" fill="#0d0f12"/>
 
       <!-- bays -->
       <g>
-        <rect x="60"  y="108" width="300" height="252" fill="url(#gBay)" stroke="rgba(232,160,32,.22)" stroke-width="2"/>
-        <rect x="450" y="108" width="300" height="252" fill="url(#gBay)" stroke="rgba(232,160,32,.22)" stroke-width="2"/>
-        <rect x="840" y="108" width="300" height="252" fill="url(#gBay)" stroke="rgba(232,160,32,.22)" stroke-width="2"/>
+        <rect x="60"  y="104" width="300" height="256" fill="url(#gBay)" stroke="rgba(232,160,32,.3)" stroke-width="2"/>
+        <rect x="450" y="104" width="300" height="256" fill="url(#gBay)" stroke="rgba(232,160,32,.3)" stroke-width="2"/>
+        <rect x="840" y="104" width="300" height="256" fill="url(#gBay)" stroke="rgba(232,160,32,.3)" stroke-width="2"/>
         <!-- rolled-up shutter slats at top of each bay -->
-        <g stroke="#2a2d31" stroke-width="1.4" opacity=".7">
-          <line x1="64"  y1="118" x2="356" y2="118"/><line x1="64"  y1="126" x2="356" y2="126"/><line x1="64"  y1="134" x2="356" y2="134"/>
-          <line x1="454" y1="118" x2="746" y2="118"/><line x1="454" y1="126" x2="746" y2="126"/><line x1="454" y1="134" x2="746" y2="134"/>
-          <line x1="844" y1="118" x2="1136" y2="118"/><line x1="844" y1="126" x2="1136" y2="126"/><line x1="844" y1="134" x2="1136" y2="134"/>
+        <g stroke="#454b53" stroke-width="1.6" opacity=".8">
+          <line x1="64"  y1="114" x2="356" y2="114"/><line x1="64"  y1="123" x2="356" y2="123"/><line x1="64"  y1="132" x2="356" y2="132"/>
+          <line x1="454" y1="114" x2="746" y2="114"/><line x1="454" y1="123" x2="746" y2="123"/><line x1="454" y1="132" x2="746" y2="132"/>
+          <line x1="844" y1="114" x2="1136" y2="114"/><line x1="844" y1="123" x2="1136" y2="123"/><line x1="844" y1="132" x2="1136" y2="132"/>
         </g>
       </g>
 
       <!-- wall sign -->
-      <text x="600" y="86" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="30" letter-spacing="6" fill="#2f343a">BSKSHOP · GARAGE</text>
+      <text x="600" y="92" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="32" letter-spacing="7" fill="#525a64">BSKSHOP · GARAGE</text>
 
       <!-- hanging lamps -->
       <g class="lamp lamp-a">
-        <line x1="210" y1="70" x2="210" y2="96" stroke="#3a3d42" stroke-width="2"/>
-        <path d="M196 96 H224 L218 108 H202 Z" fill="#2a2d31"/>
-        <circle cx="210" cy="110" r="4" fill="#ffe7a8"/>
-        <ellipse cx="210" cy="150" rx="70" ry="58" fill="url(#gLamp)"/>
+        <line x1="210" y1="66" x2="210" y2="92" stroke="#525a64" stroke-width="2"/>
+        <path d="M194 92 H226 L219 104 H201 Z" fill="#3a3f47"/>
+        <circle cx="210" cy="106" r="5" fill="#fff0c4"/>
+        <ellipse cx="210" cy="150" rx="80" ry="64" fill="url(#gLamp)"/>
       </g>
       <g class="lamp lamp-b">
-        <line x1="600" y1="70" x2="600" y2="96" stroke="#3a3d42" stroke-width="2"/>
-        <path d="M586 96 H614 L608 108 H592 Z" fill="#2a2d31"/>
-        <circle cx="600" cy="110" r="4" fill="#ffe7a8"/>
-        <ellipse cx="600" cy="150" rx="70" ry="58" fill="url(#gLamp)"/>
+        <line x1="600" y1="66" x2="600" y2="92" stroke="#525a64" stroke-width="2"/>
+        <path d="M584 92 H616 L609 104 H591 Z" fill="#3a3f47"/>
+        <circle cx="600" cy="106" r="5" fill="#fff0c4"/>
+        <ellipse cx="600" cy="150" rx="80" ry="64" fill="url(#gLamp)"/>
       </g>
       <g class="lamp lamp-c">
-        <line x1="990" y1="70" x2="990" y2="96" stroke="#3a3d42" stroke-width="2"/>
-        <path d="M976 96 H1004 L998 108 H982 Z" fill="#2a2d31"/>
-        <circle cx="990" cy="110" r="4" fill="#ffe7a8"/>
-        <ellipse cx="990" cy="150" rx="70" ry="58" fill="url(#gLamp)"/>
+        <line x1="990" y1="66" x2="990" y2="92" stroke="#525a64" stroke-width="2"/>
+        <path d="M974 92 H1006 L999 104 H981 Z" fill="#3a3f47"/>
+        <circle cx="990" cy="106" r="5" fill="#fff0c4"/>
+        <ellipse cx="990" cy="150" rx="80" ry="64" fill="url(#gLamp)"/>
       </g>
 
-      <!-- pegboard tools on left bay -->
-      <g stroke="#41454a" stroke-width="2" fill="none" opacity=".8">
-        <path d="M150 180 l18 18 M168 180 l-18 18"/>
-        <circle cx="205" cy="188" r="9"/>
-        <path d="M240 178 v22 M232 178 h16"/>
+      <!-- pegboard tools -->
+      <g stroke="#5b626b" stroke-width="2" fill="none" opacity=".85">
+        <path d="M150 175 l18 18 M168 175 l-18 18"/>
+        <circle cx="205" cy="184" r="9"/>
+        <path d="M240 173 v22 M232 173 h16"/>
       </g>
 
       <!-- 2-post lift with a raised car in left bay -->
       <g>
-        <rect x="118" y="150" width="10" height="210" fill="#23262b"/>
-        <rect x="300" y="150" width="10" height="210" fill="#23262b"/>
-        <rect x="118" y="150" width="192" height="10" fill="#2c3036"/>
-        <!-- lift arms + raised car -->
-        <rect x="135" y="250" width="160" height="8" fill="#2c3036"/>
-        <g transform="translate(150,196) scale(.62)">
-          <path d="M8 60 L8 46 Q8 41 13 41 L52 41 L74 22 Q79 18 87 18 L120 18 Q129 18 134 24 L152 41 L176 45 Q182 47 182 53 L182 60 Q182 63 179 63 L11 63 Q8 63 8 60 Z" fill="#3a4048"/>
-          <path d="M78 39 L90 25 L108 25 L108 39 Z" fill="#0a0e12"/>
-          <path d="M114 25 L120 25 Q127 25 131 29 L139 39 L114 39 Z" fill="#0a0e12"/>
-          <circle cx="50" cy="60" r="15" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3"/>
-          <circle cx="140" cy="60" r="15" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3"/>
+        <rect x="118" y="150" width="10" height="210" fill="#30353d"/>
+        <rect x="300" y="150" width="10" height="210" fill="#30353d"/>
+        <rect x="118" y="150" width="192" height="10" fill="#3a4049"/>
+        <rect x="135" y="250" width="160" height="8" fill="#3a4049"/>
+        <g transform="translate(150,196) scale(.62)" fill="#454c55">
+          <path d="M8 60 L8 46 Q8 41 13 41 L52 41 L74 22 Q79 18 87 18 L120 18 Q129 18 134 24 L152 41 L176 45 Q182 47 182 53 L182 60 Q182 63 179 63 L11 63 Q8 63 8 60 Z"/>
+          <path d="M78 39 L90 25 L108 25 L108 39 Z" fill="#10161d"/>
+          <path d="M114 25 L120 25 Q127 25 131 29 L139 39 L114 39 Z" fill="#10161d"/>
+          <circle cx="50" cy="60" r="15" fill="#0c0d0e" stroke="#555c64" stroke-width="3"/>
+          <circle cx="140" cy="60" r="15" fill="#0c0d0e" stroke="#555c64" stroke-width="3"/>
         </g>
       </g>
 
-      <!-- tire stack right -->
+      <!-- tool cabinet right -->
       <g>
-        <ellipse cx="1150" cy="338" rx="34" ry="13" fill="#0e0f11" stroke="#26292d" stroke-width="3"/>
-        <ellipse cx="1150" cy="322" rx="34" ry="13" fill="#101113" stroke="#26292d" stroke-width="3"/>
-        <ellipse cx="1150" cy="306" rx="34" ry="13" fill="#121315" stroke="#26292d" stroke-width="3"/>
+        <rect x="1095" y="250" width="86" height="110" rx="3" fill="#2b3038" stroke="#3d434c" stroke-width="2"/>
+        <g stroke="#3d434c" stroke-width="2"><line x1="1095" y1="280" x2="1181" y2="280"/><line x1="1095" y1="306" x2="1181" y2="306"/><line x1="1095" y1="332" x2="1181" y2="332"/></g>
+        <g fill="#e8a020"><rect x="1132" y="266" width="12" height="3"/><rect x="1132" y="292" width="12" height="3"/><rect x="1132" y="318" width="12" height="3"/><rect x="1132" y="344" width="12" height="3"/></g>
+      </g>
+      <!-- tire stack -->
+      <g>
+        <ellipse cx="1045" cy="350" rx="34" ry="12" fill="#15171a" stroke="#33383f" stroke-width="3"/>
+        <ellipse cx="1045" cy="334" rx="34" ry="12" fill="#171a1e" stroke="#33383f" stroke-width="3"/>
+        <ellipse cx="1045" cy="318" rx="34" ry="12" fill="#191c20" stroke="#33383f" stroke-width="3"/>
       </g>
 
       <!-- floor -->
       <rect x="0" y="360" width="1200" height="80" fill="url(#gFloor)"/>
-      <g stroke="#e8a020" stroke-width="3" opacity=".25" stroke-dasharray="26 22">
-        <line x1="0" y1="400" x2="1200" y2="400"/>
+      <rect x="0" y="360" width="1200" height="26" fill="url(#gSheen)"/>
+      <!-- floor reflections of bays -->
+      <g opacity=".12">
+        <rect x="180" y="360" width="60" height="60" fill="#dce8f5"/>
+        <rect x="575" y="360" width="60" height="60" fill="#dce8f5"/>
+        <rect x="965" y="360" width="60" height="60" fill="#dce8f5"/>
       </g>
-      <!-- bay entry hashes -->
-      <g stroke="rgba(232,160,32,.3)" stroke-width="4">
-        <line x1="470" y1="372" x2="500" y2="372"/><line x1="520" y1="372" x2="550" y2="372"/><line x1="570" y1="372" x2="600" y2="372"/>
-        <line x1="860" y1="372" x2="890" y2="372"/><line x1="910" y1="372" x2="940" y2="372"/><line x1="960" y1="372" x2="990" y2="372"/>
+      <g stroke="#e8a020" stroke-width="3" opacity=".3" stroke-dasharray="26 22">
+        <line x1="0" y1="402" x2="1200" y2="402"/>
+      </g>
+      <g stroke="rgba(232,160,32,.34)" stroke-width="4">
+        <line x1="470" y1="374" x2="500" y2="374"/><line x1="520" y1="374" x2="550" y2="374"/><line x1="570" y1="374" x2="600" y2="374"/>
+        <line x1="860" y1="374" x2="890" y2="374"/><line x1="910" y1="374" x2="940" y2="374"/><line x1="960" y1="374" x2="990" y2="374"/>
       </g>
 
-      <!-- ===== CARS : 1 qui se gare + 4 en circulation continue ===== -->
-      <!-- car-a : se gare dans la baie centrale (orange) -->
+      <!-- ===== VRAIES VOITURES : silhouettes de marque (wheel cy=70, empattement 62↔212) ===== -->
+      <!-- car-a : MERCEDES-AMG GT (argent) — se gare dans la baie centrale -->
       <g class="car car-a">
-        <ellipse cx="92" cy="80" rx="88" ry="9" fill="rgba(0,0,0,.45)"/>
-        <path d="M8 60 L8 46 Q8 41 13 41 L52 41 L74 22 Q79 18 87 18 L120 18 Q129 18 134 24 L152 41 L176 45 Q182 47 182 53 L182 60 Q182 63 179 63 L11 63 Q8 63 8 60 Z" fill="url(#gCarA)"/>
-        <path d="M78 39 L90 25 L108 25 L108 39 Z" fill="#0a0e12"/>
-        <path d="M114 25 L120 25 Q127 25 131 29 L139 39 L114 39 Z" fill="#0a0e12"/>
-        <rect x="176" y="48" width="7" height="7" rx="1.5" fill="#ffe7a8"/>
-        <path class="beam" d="M183 51 L255 40 L255 62 L183 58 Z" fill="url(#gBeam)"/>
-        <rect x="7" y="50" width="5" height="6" rx="1.5" fill="#e63935"/>
-        <g class="wheel"><circle cx="50" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="50" cy="60" r="6.5" fill="#15171a" stroke="#e8a020" stroke-width="1.6"/><path d="M50 46.5V54 M50 66V73.5 M36.5 60H44 M56 60H63.5" stroke="#5a6068" stroke-width="2"/></g>
-        <g class="wheel"><circle cx="140" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="140" cy="60" r="6.5" fill="#15171a" stroke="#e8a020" stroke-width="1.6"/><path d="M140 46.5V54 M140 66V73.5 M126.5 60H134 M146 60H153.5" stroke="#5a6068" stroke-width="2"/></g>
+        <ellipse cx="137" cy="92" rx="122" ry="8" fill="rgba(0,0,0,.45)"/>
+        <path d="M18 64 Q22 50 42 48 L80 46 L106 33 L142 32 L160 34 L182 44 L268 51 L273 60 L267 66 L236 66 Q212 48 188 66 L86 66 Q62 48 38 66 L18 64 Z" fill="currentColor"/>
+        <path d="M110 35 L141 34 L158 35 L176 44 L122 44 Z" fill="url(#gGlass)"/>
+        <path d="M48 47 L106 35 L158 35 L180 44 L120 45 Z" fill="rgba(255,255,255,.06)"/>
+        <rect x="17" y="50" width="7" height="5" rx="1" fill="#e63935"/>
+        <path d="M260 48 L271 51 L269 56 L259 54 Z" fill="#fff3d0"/>
+        <path class="beam" d="M271 53 L327 44 L327 64 L271 60 Z" fill="url(#gBeam)"/>
+        <g class="wheel"><circle cx="62" cy="70" r="22" fill="#0a0a0b"/><circle cx="62" cy="70" r="21" fill="none" stroke="#1c1f24" stroke-width="3"/><circle cx="62" cy="70" r="14.5" fill="#15181d" stroke="currentColor" stroke-width="1.8"/><g stroke="#4a5159" stroke-width="2" stroke-linecap="round"><line x1="62" y1="57" x2="62" y2="83"/><line x1="49" y1="70" x2="75" y2="70"/><line x1="53" y1="61" x2="71" y2="79"/><line x1="71" y1="61" x2="53" y2="79"/></g><circle cx="62" cy="70" r="3.6" fill="#0c0d0e" stroke="#5a6068"/></g>
+        <g class="wheel"><circle cx="212" cy="70" r="22" fill="#0a0a0b"/><circle cx="212" cy="70" r="21" fill="none" stroke="#1c1f24" stroke-width="3"/><circle cx="212" cy="70" r="14.5" fill="#15181d" stroke="currentColor" stroke-width="1.8"/><g stroke="#4a5159" stroke-width="2" stroke-linecap="round"><line x1="212" y1="57" x2="212" y2="83"/><line x1="199" y1="70" x2="225" y2="70"/><line x1="203" y1="61" x2="221" y2="79"/><line x1="221" y1="61" x2="203" y2="79"/></g><circle cx="212" cy="70" r="3.6" fill="#0c0d0e" stroke="#5a6068"/></g>
       </g>
 
-      <!-- car-t1 : avant-plan, vers la gauche (orange vif) -->
+      <!-- car-t1 : LAMBORGHINI (vert) — avant-plan, vers la gauche -->
       <g class="car car-t1">
-        <ellipse cx="92" cy="80" rx="88" ry="9" fill="rgba(0,0,0,.45)"/>
-        <path d="M8 60 L8 46 Q8 41 13 41 L52 41 L74 22 Q79 18 87 18 L120 18 Q129 18 134 24 L152 41 L176 45 Q182 47 182 53 L182 60 Q182 63 179 63 L11 63 Q8 63 8 60 Z" fill="url(#gCarA)"/>
-        <path d="M78 39 L90 25 L108 25 L108 39 Z" fill="#0a0e12"/>
-        <path d="M114 25 L120 25 Q127 25 131 29 L139 39 L114 39 Z" fill="#0a0e12"/>
-        <rect x="176" y="48" width="7" height="7" rx="1.5" fill="#ffe7a8"/>
-        <path class="beam" d="M183 51 L255 40 L255 62 L183 58 Z" fill="url(#gBeam)"/>
-        <rect x="7" y="50" width="5" height="6" rx="1.5" fill="#e63935"/>
-        <g class="wheel"><circle cx="50" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="50" cy="60" r="6.5" fill="#15171a" stroke="#e8a020" stroke-width="1.6"/><path d="M50 46.5V54 M50 66V73.5 M36.5 60H44 M56 60H63.5" stroke="#5a6068" stroke-width="2"/></g>
-        <g class="wheel"><circle cx="140" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="140" cy="60" r="6.5" fill="#15171a" stroke="#e8a020" stroke-width="1.6"/><path d="M140 46.5V54 M140 66V73.5 M126.5 60H134 M146 60H153.5" stroke="#5a6068" stroke-width="2"/></g>
+        <ellipse cx="137" cy="92" rx="122" ry="8" fill="rgba(0,0,0,.45)"/>
+        <path d="M18 66 L16 54 L46 49 L104 45 L126 33 L172 32 L198 42 L264 47 L270 56 L266 66 L236 66 Q212 48 188 66 L86 66 Q62 48 38 66 L18 66 Z" fill="currentColor"/>
+        <path d="M130 35 L170 34 L191 42 L150 43 Z" fill="url(#gGlass)"/>
+        <path d="M98 50 L120 46 L116 56 L100 57 Z" fill="rgba(0,0,0,.32)"/>
+        <path d="M48 49 L126 35 L172 34 L150 44 L60 51 Z" fill="rgba(255,255,255,.06)"/>
+        <rect x="16" y="50" width="6" height="5" fill="#e63935"/>
+        <path d="M258 47 L268 49 L266 54 L256 53 Z" fill="#fff3d0"/>
+        <path class="beam" d="M268 51 L324 42 L324 62 L268 58 Z" fill="url(#gBeam)"/>
+        <g class="wheel"><circle cx="62" cy="70" r="22" fill="#0a0a0b"/><circle cx="62" cy="70" r="21" fill="none" stroke="#1c1f24" stroke-width="3"/><circle cx="62" cy="70" r="14.5" fill="#15181d" stroke="currentColor" stroke-width="1.8"/><g stroke="#4a5159" stroke-width="2" stroke-linecap="round"><line x1="62" y1="57" x2="62" y2="83"/><line x1="49" y1="70" x2="75" y2="70"/><line x1="53" y1="61" x2="71" y2="79"/><line x1="71" y1="61" x2="53" y2="79"/></g><circle cx="62" cy="70" r="3.6" fill="#0c0d0e" stroke="#5a6068"/></g>
+        <g class="wheel"><circle cx="212" cy="70" r="22" fill="#0a0a0b"/><circle cx="212" cy="70" r="21" fill="none" stroke="#1c1f24" stroke-width="3"/><circle cx="212" cy="70" r="14.5" fill="#15181d" stroke="currentColor" stroke-width="1.8"/><g stroke="#4a5159" stroke-width="2" stroke-linecap="round"><line x1="212" y1="57" x2="212" y2="83"/><line x1="199" y1="70" x2="225" y2="70"/><line x1="203" y1="61" x2="221" y2="79"/><line x1="221" y1="61" x2="203" y2="79"/></g><circle cx="212" cy="70" r="3.6" fill="#0c0d0e" stroke="#5a6068"/></g>
       </g>
 
-      <!-- car-t2 : plan moyen, vers la droite (bleu) -->
+      <!-- car-t2 : AUDI R8 (gris Nardo) — plan moyen, vers la droite -->
       <g class="car car-t2">
-        <ellipse cx="92" cy="80" rx="88" ry="9" fill="rgba(0,0,0,.45)"/>
-        <path d="M8 60 L8 46 Q8 41 13 41 L52 41 L74 22 Q79 18 87 18 L120 18 Q129 18 134 24 L152 41 L176 45 Q182 47 182 53 L182 60 Q182 63 179 63 L11 63 Q8 63 8 60 Z" fill="url(#gCarB)"/>
-        <path d="M78 39 L90 25 L108 25 L108 39 Z" fill="#0a0e12"/>
-        <path d="M114 25 L120 25 Q127 25 131 29 L139 39 L114 39 Z" fill="#0a0e12"/>
-        <rect x="176" y="48" width="7" height="7" rx="1.5" fill="#ffe7a8"/>
-        <path class="beam" d="M183 51 L255 40 L255 62 L183 58 Z" fill="url(#gBeam)"/>
-        <rect x="7" y="50" width="5" height="6" rx="1.5" fill="#e63935"/>
-        <g class="wheel"><circle cx="50" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="50" cy="60" r="6.5" fill="#15171a" stroke="#4fc3f7" stroke-width="1.6"/><path d="M50 46.5V54 M50 66V73.5 M36.5 60H44 M56 60H63.5" stroke="#5a6068" stroke-width="2"/></g>
-        <g class="wheel"><circle cx="140" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="140" cy="60" r="6.5" fill="#15171a" stroke="#4fc3f7" stroke-width="1.6"/><path d="M140 46.5V54 M140 66V73.5 M126.5 60H134 M146 60H153.5" stroke="#5a6068" stroke-width="2"/></g>
+        <ellipse cx="137" cy="92" rx="122" ry="8" fill="rgba(0,0,0,.45)"/>
+        <path d="M18 66 L16 54 L48 49 L110 45 L132 33 L174 32 L200 42 L262 47 L270 57 L266 66 L236 66 Q212 48 188 66 L86 66 Q62 48 38 66 L18 66 Z" fill="currentColor"/>
+        <path d="M136 35 L172 34 L193 43 L152 44 Z" fill="url(#gGlass)"/>
+        <path d="M150 45 L166 33 L174 35 L160 47 Z" fill="rgba(0,0,0,.34)"/>
+        <path d="M50 49 L132 35 L174 34 L150 44 L60 51 Z" fill="rgba(255,255,255,.06)"/>
+        <rect x="16" y="50" width="6" height="5" fill="#e63935"/>
+        <path d="M256 47 L268 50 L266 55 L255 53 Z" fill="#fff3d0"/>
+        <path class="beam" d="M268 52 L324 43 L324 63 L268 59 Z" fill="url(#gBeam)"/>
+        <g class="wheel"><circle cx="62" cy="70" r="22" fill="#0a0a0b"/><circle cx="62" cy="70" r="21" fill="none" stroke="#1c1f24" stroke-width="3"/><circle cx="62" cy="70" r="14.5" fill="#15181d" stroke="currentColor" stroke-width="1.8"/><g stroke="#4a5159" stroke-width="2" stroke-linecap="round"><line x1="62" y1="57" x2="62" y2="83"/><line x1="49" y1="70" x2="75" y2="70"/><line x1="53" y1="61" x2="71" y2="79"/><line x1="71" y1="61" x2="53" y2="79"/></g><circle cx="62" cy="70" r="3.6" fill="#0c0d0e" stroke="#5a6068"/></g>
+        <g class="wheel"><circle cx="212" cy="70" r="22" fill="#0a0a0b"/><circle cx="212" cy="70" r="21" fill="none" stroke="#1c1f24" stroke-width="3"/><circle cx="212" cy="70" r="14.5" fill="#15181d" stroke="currentColor" stroke-width="1.8"/><g stroke="#4a5159" stroke-width="2" stroke-linecap="round"><line x1="212" y1="57" x2="212" y2="83"/><line x1="199" y1="70" x2="225" y2="70"/><line x1="203" y1="61" x2="221" y2="79"/><line x1="221" y1="61" x2="203" y2="79"/></g><circle cx="212" cy="70" r="3.6" fill="#0c0d0e" stroke="#5a6068"/></g>
       </g>
 
-      <!-- car-t3 : arrière-plan rapide, vers la gauche (argent) -->
+      <!-- car-t3 : PORSCHE 911 (rouge) — arrière-plan rapide, vers la gauche -->
       <g class="car car-t3">
-        <ellipse cx="92" cy="80" rx="88" ry="9" fill="rgba(0,0,0,.45)"/>
-        <path d="M8 60 L8 46 Q8 41 13 41 L52 41 L74 22 Q79 18 87 18 L120 18 Q129 18 134 24 L152 41 L176 45 Q182 47 182 53 L182 60 Q182 63 179 63 L11 63 Q8 63 8 60 Z" fill="url(#gCarC)"/>
-        <path d="M78 39 L90 25 L108 25 L108 39 Z" fill="#0a0e12"/>
-        <path d="M114 25 L120 25 Q127 25 131 29 L139 39 L114 39 Z" fill="#0a0e12"/>
-        <rect x="176" y="48" width="7" height="7" rx="1.5" fill="#ffe7a8"/>
-        <path class="beam" d="M183 51 L255 40 L255 62 L183 58 Z" fill="url(#gBeam)"/>
-        <rect x="7" y="50" width="5" height="6" rx="1.5" fill="#e63935"/>
-        <g class="wheel"><circle cx="50" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="50" cy="60" r="6.5" fill="#15171a" stroke="#c8cdd2" stroke-width="1.6"/><path d="M50 46.5V54 M50 66V73.5 M36.5 60H44 M56 60H63.5" stroke="#5a6068" stroke-width="2"/></g>
-        <g class="wheel"><circle cx="140" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="140" cy="60" r="6.5" fill="#15171a" stroke="#c8cdd2" stroke-width="1.6"/><path d="M140 46.5V54 M140 66V73.5 M126.5 60H134 M146 60H153.5" stroke="#5a6068" stroke-width="2"/></g>
+        <ellipse cx="137" cy="92" rx="122" ry="8" fill="rgba(0,0,0,.45)"/>
+        <path d="M18 64 Q14 54 28 50 Q74 46 98 44 Q122 31 160 31 Q188 32 206 43 Q246 47 262 51 Q271 53 268 61 L264 66 L236 66 Q212 48 188 66 L86 66 Q62 48 38 66 L18 64 Z" fill="currentColor"/>
+        <path d="M104 43 Q132 32 158 33 L198 43 Z" fill="url(#gGlass)"/>
+        <path d="M30 50 Q90 45 122 42 Q150 33 180 38 L150 45 Q90 49 40 53 Z" fill="rgba(255,255,255,.06)"/>
+        <rect x="16" y="49" width="9" height="4" rx="1" fill="#e63935"/>
+        <ellipse cx="258" cy="50" rx="5" ry="6" fill="#fff3d0"/>
+        <path class="beam" d="M268 53 L324 44 L324 64 L268 60 Z" fill="url(#gBeam)"/>
+        <g class="wheel"><circle cx="62" cy="70" r="22" fill="#0a0a0b"/><circle cx="62" cy="70" r="21" fill="none" stroke="#1c1f24" stroke-width="3"/><circle cx="62" cy="70" r="14.5" fill="#15181d" stroke="currentColor" stroke-width="1.8"/><g stroke="#4a5159" stroke-width="2" stroke-linecap="round"><line x1="62" y1="57" x2="62" y2="83"/><line x1="49" y1="70" x2="75" y2="70"/><line x1="53" y1="61" x2="71" y2="79"/><line x1="71" y1="61" x2="53" y2="79"/></g><circle cx="62" cy="70" r="3.6" fill="#0c0d0e" stroke="#5a6068"/></g>
+        <g class="wheel"><circle cx="212" cy="70" r="22" fill="#0a0a0b"/><circle cx="212" cy="70" r="21" fill="none" stroke="#1c1f24" stroke-width="3"/><circle cx="212" cy="70" r="14.5" fill="#15181d" stroke="currentColor" stroke-width="1.8"/><g stroke="#4a5159" stroke-width="2" stroke-linecap="round"><line x1="212" y1="57" x2="212" y2="83"/><line x1="199" y1="70" x2="225" y2="70"/><line x1="203" y1="61" x2="221" y2="79"/><line x1="221" y1="61" x2="203" y2="79"/></g><circle cx="212" cy="70" r="3.6" fill="#0c0d0e" stroke="#5a6068"/></g>
       </g>
 
-      <!-- car-t4 : avant-plan, vers la gauche (rouge) -->
+      <!-- car-t4 : LAMBORGHINI (jaune) — avant-plan, vers la gauche -->
       <g class="car car-t4">
-        <ellipse cx="92" cy="80" rx="88" ry="9" fill="rgba(0,0,0,.45)"/>
-        <path d="M8 60 L8 46 Q8 41 13 41 L52 41 L74 22 Q79 18 87 18 L120 18 Q129 18 134 24 L152 41 L176 45 Q182 47 182 53 L182 60 Q182 63 179 63 L11 63 Q8 63 8 60 Z" fill="url(#gCarD)"/>
-        <path d="M78 39 L90 25 L108 25 L108 39 Z" fill="#0a0e12"/>
-        <path d="M114 25 L120 25 Q127 25 131 29 L139 39 L114 39 Z" fill="#0a0e12"/>
-        <rect x="176" y="48" width="7" height="7" rx="1.5" fill="#ffe7a8"/>
-        <path class="beam" d="M183 51 L255 40 L255 62 L183 58 Z" fill="url(#gBeam)"/>
-        <rect x="7" y="50" width="5" height="6" rx="1.5" fill="#e63935"/>
-        <g class="wheel"><circle cx="50" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="50" cy="60" r="6.5" fill="#15171a" stroke="#e0564f" stroke-width="1.6"/><path d="M50 46.5V54 M50 66V73.5 M36.5 60H44 M56 60H63.5" stroke="#5a6068" stroke-width="2"/></g>
-        <g class="wheel"><circle cx="140" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="140" cy="60" r="6.5" fill="#15171a" stroke="#e0564f" stroke-width="1.6"/><path d="M140 46.5V54 M140 66V73.5 M126.5 60H134 M146 60H153.5" stroke="#5a6068" stroke-width="2"/></g>
+        <ellipse cx="137" cy="92" rx="122" ry="8" fill="rgba(0,0,0,.45)"/>
+        <path d="M18 66 L16 54 L46 49 L104 45 L126 33 L172 32 L198 42 L264 47 L270 56 L266 66 L236 66 Q212 48 188 66 L86 66 Q62 48 38 66 L18 66 Z" fill="currentColor"/>
+        <path d="M130 35 L170 34 L191 42 L150 43 Z" fill="url(#gGlass)"/>
+        <path d="M98 50 L120 46 L116 56 L100 57 Z" fill="rgba(0,0,0,.32)"/>
+        <path d="M48 49 L126 35 L172 34 L150 44 L60 51 Z" fill="rgba(255,255,255,.06)"/>
+        <rect x="16" y="50" width="6" height="5" fill="#e63935"/>
+        <path d="M258 47 L268 49 L266 54 L256 53 Z" fill="#fff3d0"/>
+        <path class="beam" d="M268 51 L324 42 L324 62 L268 58 Z" fill="url(#gBeam)"/>
+        <g class="wheel"><circle cx="62" cy="70" r="22" fill="#0a0a0b"/><circle cx="62" cy="70" r="21" fill="none" stroke="#1c1f24" stroke-width="3"/><circle cx="62" cy="70" r="14.5" fill="#15181d" stroke="currentColor" stroke-width="1.8"/><g stroke="#4a5159" stroke-width="2" stroke-linecap="round"><line x1="62" y1="57" x2="62" y2="83"/><line x1="49" y1="70" x2="75" y2="70"/><line x1="53" y1="61" x2="71" y2="79"/><line x1="71" y1="61" x2="53" y2="79"/></g><circle cx="62" cy="70" r="3.6" fill="#0c0d0e" stroke="#5a6068"/></g>
+        <g class="wheel"><circle cx="212" cy="70" r="22" fill="#0a0a0b"/><circle cx="212" cy="70" r="21" fill="none" stroke="#1c1f24" stroke-width="3"/><circle cx="212" cy="70" r="14.5" fill="#15181d" stroke="currentColor" stroke-width="1.8"/><g stroke="#4a5159" stroke-width="2" stroke-linecap="round"><line x1="212" y1="57" x2="212" y2="83"/><line x1="199" y1="70" x2="225" y2="70"/><line x1="203" y1="61" x2="221" y2="79"/><line x1="221" y1="61" x2="203" y2="79"/></g><circle cx="212" cy="70" r="3.6" fill="#0c0d0e" stroke="#5a6068"/></g>
       </g>
     </svg>
   </div>
@@ -1128,7 +1157,13 @@
   <div class="garage-overlay">
     <div class="section-label">Le garage</div>
     <h2 class="section-title">Atelier<br><span style="color:var(--accent)">mécanique</span></h2>
-    <p class="section-sub">Un atelier équipé pour le diagnostic et la reprogrammation. Vos véhicules entrent en baie, repartent optimisés.</p>
+    <p class="section-sub">Diagnostic, reprogrammation et dépollution sur tous types de véhicules — du quotidien à la sportive.</p>
+    <div style="display:flex; gap:9px; flex-wrap:wrap; margin-top:22px;">
+      <span style="font-family:'IBM Plex Mono',monospace; font-size:.62rem; letter-spacing:.12em; padding:7px 12px; border:1px solid var(--border); color:var(--text); background:rgba(10,10,10,.4);">PORSCHE</span>
+      <span style="font-family:'IBM Plex Mono',monospace; font-size:.62rem; letter-spacing:.12em; padding:7px 12px; border:1px solid var(--border); color:var(--text); background:rgba(10,10,10,.4);">LAMBORGHINI</span>
+      <span style="font-family:'IBM Plex Mono',monospace; font-size:.62rem; letter-spacing:.12em; padding:7px 12px; border:1px solid var(--border); color:var(--text); background:rgba(10,10,10,.4);">AUDI</span>
+      <span style="font-family:'IBM Plex Mono',monospace; font-size:.62rem; letter-spacing:.12em; padding:7px 12px; border:1px solid var(--border); color:var(--text); background:rgba(10,10,10,.4);">MERCEDES-AMG</span>
+    </div>
   </div>
 </section>
 
