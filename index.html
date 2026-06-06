@@ -397,6 +397,69 @@
       box-shadow: 0 0 10px var(--accent); animation: blink 1.4s infinite;
     }
     @media (max-width: 960px) { #antigravity { padding: 64px 20px; min-height: 540px; } }
+
+    /* ===== ATELIER MÉCANIQUE : voitures entrant dans le garage (arrière-plan animé) ===== */
+    #atelier {
+      position: relative; overflow: hidden; border-top: 1px solid var(--border);
+      min-height: 560px; padding: 110px 72px;
+      background:
+        radial-gradient(75% 55% at 50% 8%, rgba(232,160,32,.12), transparent 60%),
+        radial-gradient(60% 50% at 85% 90%, rgba(79,195,247,.07), transparent 60%),
+        linear-gradient(180deg, #181b21 0%, #1c2128 46%, #0f1115 100%);
+    }
+    .garage-scene { position: absolute; inset: 0; z-index: 1; }
+    .garage-svg { width: 100%; height: 100%; display: block; }
+    /* scrim de lisibilité côté texte */
+    .garage-scene::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(8,8,9,.94) 0%, rgba(8,8,9,.6) 34%, rgba(8,8,9,.05) 62%, rgba(8,8,9,0) 82%),
+        linear-gradient(0deg, rgba(8,8,9,.65) 0%, rgba(8,8,9,0) 32%);
+    }
+    .garage-overlay { position: relative; z-index: 2; pointer-events: none; max-width: 560px; }
+
+    /* roues qui tournent */
+    .garage-svg .wheel { transform-box: fill-box; transform-origin: 50% 50%; animation: gspin .55s linear infinite; }
+    @keyframes gspin { to { transform: rotate(360deg); } }
+
+    /* voitures : circulation continue (plans de profondeur + 2 sens) + 1 qui se gare */
+    .garage-svg .car { transform-box: fill-box; transform-origin: 50% 50%; will-change: transform, opacity; }
+
+    /* voiture qui rentre dans la baie centrale et se gare */
+    .car-a { opacity: 1; transform: translate(470px,283px) scale(-1,1); animation: driveA 18s ease-in-out infinite; }
+    @keyframes driveA {
+      0%   { transform: translate(1320px,283px) scale(-1,1);   opacity: 0; }
+      5%   { opacity: 1; }
+      34%  { transform: translate(470px,283px)  scale(-1,1);   opacity: 1; }
+      46%  { transform: translate(470px,283px)  scale(-1,1);   opacity: 1; }
+      64%  { transform: translate(505px,250px)  scale(-.5,.5); opacity: 0; }
+      100% { transform: translate(505px,250px)  scale(-.5,.5); opacity: 0; }
+    }
+
+    /* trafic en boucle — vitesses, tailles (profondeur) et sens variés */
+    .car-t1 { animation: t1 8s  linear infinite; }       /* avant-plan, vers la gauche */
+    .car-t2 { animation: t2 13s linear infinite 3s; }    /* plan moyen, vers la droite */
+    .car-t3 { animation: t3 6.5s linear infinite 1s; }   /* arrière-plan rapide, vers la gauche */
+    .car-t4 { animation: t4 15s linear infinite 6s; }    /* avant-plan, vers la gauche */
+    @keyframes t1 { from { transform: translate(1320px,302px) scale(-1,1); }    to { transform: translate(-300px,302px) scale(-1,1); } }
+    @keyframes t2 { from { transform: translate(-320px,316px) scale(.82,.82); } to { transform: translate(1320px,316px) scale(.82,.82); } }
+    @keyframes t3 { from { transform: translate(1300px,250px) scale(-.5,.5); }  to { transform: translate(-220px,250px) scale(-.5,.5); } }
+    @keyframes t4 { from { transform: translate(1340px,309px) scale(-.95,.95); } to { transform: translate(-300px,309px) scale(-.95,.95); } }
+    /* lampes d'atelier qui vacillent */
+    .garage-svg .lamp { animation: lampFlick 5s ease-in-out infinite; }
+    .garage-svg .lamp-b { animation-delay: 1.6s; }
+    .garage-svg .lamp-c { animation-delay: 3.1s; }
+    @keyframes lampFlick { 0%,100%{opacity:.92} 47%{opacity:.8} 49%{opacity:.5} 51%{opacity:.88} 70%{opacity:.82} }
+
+    @media (max-width: 960px) { #atelier { padding: 64px 20px; min-height: 440px; } }
+    @media (prefers-reduced-motion: reduce) {
+      .garage-svg .wheel, .garage-svg .car, .garage-svg .lamp { animation: none !important; }
+      .car-a  { opacity: 1; transform: translate(470px,283px) scale(-1,1); }
+      .car-t1 { opacity: 1; transform: translate(300px,302px) scale(-1,1); }
+      .car-t2 { opacity: 1; transform: translate(720px,316px) scale(.82,.82); }
+      .car-t3 { opacity: 1; transform: translate(980px,250px) scale(-.5,.5); }
+      .car-t4 { opacity: 1; transform: translate(110px,309px) scale(-.95,.95); }
+    }
   </style>
 </head>
 <body>
@@ -872,6 +935,200 @@
       <div class="ps-title">Rapport & conseil</div>
       <p class="ps-desc">Rapport complet remis le jour même. Explications claires et préconisations pour la suite des interventions.</p>
     </div>
+  </div>
+</section>
+
+<!-- ATELIER MÉCANIQUE : garage animé avec voitures qui rentrent -->
+<section id="atelier">
+  <div class="garage-scene" aria-hidden="true">
+    <svg class="garage-svg" viewBox="0 0 1200 440" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="gWall" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#1a1d22"/><stop offset="1" stop-color="#101216"/>
+        </linearGradient>
+        <linearGradient id="gFloor" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#15171a"/><stop offset="1" stop-color="#0a0b0c"/>
+        </linearGradient>
+        <radialGradient id="gBay" cx="50%" cy="35%" r="75%">
+          <stop offset="0" stop-color="#23262b"/><stop offset="1" stop-color="#08090b"/>
+        </radialGradient>
+        <radialGradient id="gLamp" cx="50%" cy="0%" r="100%">
+          <stop offset="0" stop-color="rgba(255,224,150,.55)"/><stop offset="1" stop-color="rgba(255,224,150,0)"/>
+        </radialGradient>
+        <linearGradient id="gCarA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#f3ad33"/><stop offset="1" stop-color="#d86a16"/>
+        </linearGradient>
+        <linearGradient id="gCarB" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#5e7486"/><stop offset="1" stop-color="#2c3742"/>
+        </linearGradient>
+        <linearGradient id="gCarC" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#d6dadf"/><stop offset="1" stop-color="#8b9197"/>
+        </linearGradient>
+        <linearGradient id="gCarD" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#e0564f"/><stop offset="1" stop-color="#9c2b27"/>
+        </linearGradient>
+        <linearGradient id="gBeam" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="rgba(255,231,168,.5)"/><stop offset="1" stop-color="rgba(255,231,168,0)"/>
+        </linearGradient>
+        <radialGradient id="gAmbient" cx="50%" cy="16%" r="72%">
+          <stop offset="0" stop-color="rgba(232,160,32,.14)"/><stop offset="1" stop-color="rgba(232,160,32,0)"/>
+        </radialGradient>
+      </defs>
+
+      <!-- back wall + ceiling -->
+      <rect x="0" y="40" width="1200" height="320" fill="url(#gWall)"/>
+      <rect x="0" y="40" width="1200" height="400" fill="url(#gAmbient)"/>
+      <rect x="0" y="40" width="1200" height="30" fill="#0d0f12"/>
+
+      <!-- bays -->
+      <g>
+        <rect x="60"  y="108" width="300" height="252" fill="url(#gBay)" stroke="rgba(232,160,32,.22)" stroke-width="2"/>
+        <rect x="450" y="108" width="300" height="252" fill="url(#gBay)" stroke="rgba(232,160,32,.22)" stroke-width="2"/>
+        <rect x="840" y="108" width="300" height="252" fill="url(#gBay)" stroke="rgba(232,160,32,.22)" stroke-width="2"/>
+        <!-- rolled-up shutter slats at top of each bay -->
+        <g stroke="#2a2d31" stroke-width="1.4" opacity=".7">
+          <line x1="64"  y1="118" x2="356" y2="118"/><line x1="64"  y1="126" x2="356" y2="126"/><line x1="64"  y1="134" x2="356" y2="134"/>
+          <line x1="454" y1="118" x2="746" y2="118"/><line x1="454" y1="126" x2="746" y2="126"/><line x1="454" y1="134" x2="746" y2="134"/>
+          <line x1="844" y1="118" x2="1136" y2="118"/><line x1="844" y1="126" x2="1136" y2="126"/><line x1="844" y1="134" x2="1136" y2="134"/>
+        </g>
+      </g>
+
+      <!-- wall sign -->
+      <text x="600" y="86" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="30" letter-spacing="6" fill="#2f343a">BSKSHOP · GARAGE</text>
+
+      <!-- hanging lamps -->
+      <g class="lamp lamp-a">
+        <line x1="210" y1="70" x2="210" y2="96" stroke="#3a3d42" stroke-width="2"/>
+        <path d="M196 96 H224 L218 108 H202 Z" fill="#2a2d31"/>
+        <circle cx="210" cy="110" r="4" fill="#ffe7a8"/>
+        <ellipse cx="210" cy="150" rx="70" ry="58" fill="url(#gLamp)"/>
+      </g>
+      <g class="lamp lamp-b">
+        <line x1="600" y1="70" x2="600" y2="96" stroke="#3a3d42" stroke-width="2"/>
+        <path d="M586 96 H614 L608 108 H592 Z" fill="#2a2d31"/>
+        <circle cx="600" cy="110" r="4" fill="#ffe7a8"/>
+        <ellipse cx="600" cy="150" rx="70" ry="58" fill="url(#gLamp)"/>
+      </g>
+      <g class="lamp lamp-c">
+        <line x1="990" y1="70" x2="990" y2="96" stroke="#3a3d42" stroke-width="2"/>
+        <path d="M976 96 H1004 L998 108 H982 Z" fill="#2a2d31"/>
+        <circle cx="990" cy="110" r="4" fill="#ffe7a8"/>
+        <ellipse cx="990" cy="150" rx="70" ry="58" fill="url(#gLamp)"/>
+      </g>
+
+      <!-- pegboard tools on left bay -->
+      <g stroke="#41454a" stroke-width="2" fill="none" opacity=".8">
+        <path d="M150 180 l18 18 M168 180 l-18 18"/>
+        <circle cx="205" cy="188" r="9"/>
+        <path d="M240 178 v22 M232 178 h16"/>
+      </g>
+
+      <!-- 2-post lift with a raised car in left bay -->
+      <g>
+        <rect x="118" y="150" width="10" height="210" fill="#23262b"/>
+        <rect x="300" y="150" width="10" height="210" fill="#23262b"/>
+        <rect x="118" y="150" width="192" height="10" fill="#2c3036"/>
+        <!-- lift arms + raised car -->
+        <rect x="135" y="250" width="160" height="8" fill="#2c3036"/>
+        <g transform="translate(150,196) scale(.62)">
+          <path d="M8 60 L8 46 Q8 41 13 41 L52 41 L74 22 Q79 18 87 18 L120 18 Q129 18 134 24 L152 41 L176 45 Q182 47 182 53 L182 60 Q182 63 179 63 L11 63 Q8 63 8 60 Z" fill="#3a4048"/>
+          <path d="M78 39 L90 25 L108 25 L108 39 Z" fill="#0a0e12"/>
+          <path d="M114 25 L120 25 Q127 25 131 29 L139 39 L114 39 Z" fill="#0a0e12"/>
+          <circle cx="50" cy="60" r="15" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3"/>
+          <circle cx="140" cy="60" r="15" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3"/>
+        </g>
+      </g>
+
+      <!-- tire stack right -->
+      <g>
+        <ellipse cx="1150" cy="338" rx="34" ry="13" fill="#0e0f11" stroke="#26292d" stroke-width="3"/>
+        <ellipse cx="1150" cy="322" rx="34" ry="13" fill="#101113" stroke="#26292d" stroke-width="3"/>
+        <ellipse cx="1150" cy="306" rx="34" ry="13" fill="#121315" stroke="#26292d" stroke-width="3"/>
+      </g>
+
+      <!-- floor -->
+      <rect x="0" y="360" width="1200" height="80" fill="url(#gFloor)"/>
+      <g stroke="#e8a020" stroke-width="3" opacity=".25" stroke-dasharray="26 22">
+        <line x1="0" y1="400" x2="1200" y2="400"/>
+      </g>
+      <!-- bay entry hashes -->
+      <g stroke="rgba(232,160,32,.3)" stroke-width="4">
+        <line x1="470" y1="372" x2="500" y2="372"/><line x1="520" y1="372" x2="550" y2="372"/><line x1="570" y1="372" x2="600" y2="372"/>
+        <line x1="860" y1="372" x2="890" y2="372"/><line x1="910" y1="372" x2="940" y2="372"/><line x1="960" y1="372" x2="990" y2="372"/>
+      </g>
+
+      <!-- ===== CARS : 1 qui se gare + 4 en circulation continue ===== -->
+      <!-- car-a : se gare dans la baie centrale (orange) -->
+      <g class="car car-a">
+        <ellipse cx="92" cy="80" rx="88" ry="9" fill="rgba(0,0,0,.45)"/>
+        <path d="M8 60 L8 46 Q8 41 13 41 L52 41 L74 22 Q79 18 87 18 L120 18 Q129 18 134 24 L152 41 L176 45 Q182 47 182 53 L182 60 Q182 63 179 63 L11 63 Q8 63 8 60 Z" fill="url(#gCarA)"/>
+        <path d="M78 39 L90 25 L108 25 L108 39 Z" fill="#0a0e12"/>
+        <path d="M114 25 L120 25 Q127 25 131 29 L139 39 L114 39 Z" fill="#0a0e12"/>
+        <rect x="176" y="48" width="7" height="7" rx="1.5" fill="#ffe7a8"/>
+        <path class="beam" d="M183 51 L255 40 L255 62 L183 58 Z" fill="url(#gBeam)"/>
+        <rect x="7" y="50" width="5" height="6" rx="1.5" fill="#e63935"/>
+        <g class="wheel"><circle cx="50" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="50" cy="60" r="6.5" fill="#15171a" stroke="#e8a020" stroke-width="1.6"/><path d="M50 46.5V54 M50 66V73.5 M36.5 60H44 M56 60H63.5" stroke="#5a6068" stroke-width="2"/></g>
+        <g class="wheel"><circle cx="140" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="140" cy="60" r="6.5" fill="#15171a" stroke="#e8a020" stroke-width="1.6"/><path d="M140 46.5V54 M140 66V73.5 M126.5 60H134 M146 60H153.5" stroke="#5a6068" stroke-width="2"/></g>
+      </g>
+
+      <!-- car-t1 : avant-plan, vers la gauche (orange vif) -->
+      <g class="car car-t1">
+        <ellipse cx="92" cy="80" rx="88" ry="9" fill="rgba(0,0,0,.45)"/>
+        <path d="M8 60 L8 46 Q8 41 13 41 L52 41 L74 22 Q79 18 87 18 L120 18 Q129 18 134 24 L152 41 L176 45 Q182 47 182 53 L182 60 Q182 63 179 63 L11 63 Q8 63 8 60 Z" fill="url(#gCarA)"/>
+        <path d="M78 39 L90 25 L108 25 L108 39 Z" fill="#0a0e12"/>
+        <path d="M114 25 L120 25 Q127 25 131 29 L139 39 L114 39 Z" fill="#0a0e12"/>
+        <rect x="176" y="48" width="7" height="7" rx="1.5" fill="#ffe7a8"/>
+        <path class="beam" d="M183 51 L255 40 L255 62 L183 58 Z" fill="url(#gBeam)"/>
+        <rect x="7" y="50" width="5" height="6" rx="1.5" fill="#e63935"/>
+        <g class="wheel"><circle cx="50" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="50" cy="60" r="6.5" fill="#15171a" stroke="#e8a020" stroke-width="1.6"/><path d="M50 46.5V54 M50 66V73.5 M36.5 60H44 M56 60H63.5" stroke="#5a6068" stroke-width="2"/></g>
+        <g class="wheel"><circle cx="140" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="140" cy="60" r="6.5" fill="#15171a" stroke="#e8a020" stroke-width="1.6"/><path d="M140 46.5V54 M140 66V73.5 M126.5 60H134 M146 60H153.5" stroke="#5a6068" stroke-width="2"/></g>
+      </g>
+
+      <!-- car-t2 : plan moyen, vers la droite (bleu) -->
+      <g class="car car-t2">
+        <ellipse cx="92" cy="80" rx="88" ry="9" fill="rgba(0,0,0,.45)"/>
+        <path d="M8 60 L8 46 Q8 41 13 41 L52 41 L74 22 Q79 18 87 18 L120 18 Q129 18 134 24 L152 41 L176 45 Q182 47 182 53 L182 60 Q182 63 179 63 L11 63 Q8 63 8 60 Z" fill="url(#gCarB)"/>
+        <path d="M78 39 L90 25 L108 25 L108 39 Z" fill="#0a0e12"/>
+        <path d="M114 25 L120 25 Q127 25 131 29 L139 39 L114 39 Z" fill="#0a0e12"/>
+        <rect x="176" y="48" width="7" height="7" rx="1.5" fill="#ffe7a8"/>
+        <path class="beam" d="M183 51 L255 40 L255 62 L183 58 Z" fill="url(#gBeam)"/>
+        <rect x="7" y="50" width="5" height="6" rx="1.5" fill="#e63935"/>
+        <g class="wheel"><circle cx="50" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="50" cy="60" r="6.5" fill="#15171a" stroke="#4fc3f7" stroke-width="1.6"/><path d="M50 46.5V54 M50 66V73.5 M36.5 60H44 M56 60H63.5" stroke="#5a6068" stroke-width="2"/></g>
+        <g class="wheel"><circle cx="140" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="140" cy="60" r="6.5" fill="#15171a" stroke="#4fc3f7" stroke-width="1.6"/><path d="M140 46.5V54 M140 66V73.5 M126.5 60H134 M146 60H153.5" stroke="#5a6068" stroke-width="2"/></g>
+      </g>
+
+      <!-- car-t3 : arrière-plan rapide, vers la gauche (argent) -->
+      <g class="car car-t3">
+        <ellipse cx="92" cy="80" rx="88" ry="9" fill="rgba(0,0,0,.45)"/>
+        <path d="M8 60 L8 46 Q8 41 13 41 L52 41 L74 22 Q79 18 87 18 L120 18 Q129 18 134 24 L152 41 L176 45 Q182 47 182 53 L182 60 Q182 63 179 63 L11 63 Q8 63 8 60 Z" fill="url(#gCarC)"/>
+        <path d="M78 39 L90 25 L108 25 L108 39 Z" fill="#0a0e12"/>
+        <path d="M114 25 L120 25 Q127 25 131 29 L139 39 L114 39 Z" fill="#0a0e12"/>
+        <rect x="176" y="48" width="7" height="7" rx="1.5" fill="#ffe7a8"/>
+        <path class="beam" d="M183 51 L255 40 L255 62 L183 58 Z" fill="url(#gBeam)"/>
+        <rect x="7" y="50" width="5" height="6" rx="1.5" fill="#e63935"/>
+        <g class="wheel"><circle cx="50" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="50" cy="60" r="6.5" fill="#15171a" stroke="#c8cdd2" stroke-width="1.6"/><path d="M50 46.5V54 M50 66V73.5 M36.5 60H44 M56 60H63.5" stroke="#5a6068" stroke-width="2"/></g>
+        <g class="wheel"><circle cx="140" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="140" cy="60" r="6.5" fill="#15171a" stroke="#c8cdd2" stroke-width="1.6"/><path d="M140 46.5V54 M140 66V73.5 M126.5 60H134 M146 60H153.5" stroke="#5a6068" stroke-width="2"/></g>
+      </g>
+
+      <!-- car-t4 : avant-plan, vers la gauche (rouge) -->
+      <g class="car car-t4">
+        <ellipse cx="92" cy="80" rx="88" ry="9" fill="rgba(0,0,0,.45)"/>
+        <path d="M8 60 L8 46 Q8 41 13 41 L52 41 L74 22 Q79 18 87 18 L120 18 Q129 18 134 24 L152 41 L176 45 Q182 47 182 53 L182 60 Q182 63 179 63 L11 63 Q8 63 8 60 Z" fill="url(#gCarD)"/>
+        <path d="M78 39 L90 25 L108 25 L108 39 Z" fill="#0a0e12"/>
+        <path d="M114 25 L120 25 Q127 25 131 29 L139 39 L114 39 Z" fill="#0a0e12"/>
+        <rect x="176" y="48" width="7" height="7" rx="1.5" fill="#ffe7a8"/>
+        <path class="beam" d="M183 51 L255 40 L255 62 L183 58 Z" fill="url(#gBeam)"/>
+        <rect x="7" y="50" width="5" height="6" rx="1.5" fill="#e63935"/>
+        <g class="wheel"><circle cx="50" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="50" cy="60" r="6.5" fill="#15171a" stroke="#e0564f" stroke-width="1.6"/><path d="M50 46.5V54 M50 66V73.5 M36.5 60H44 M56 60H63.5" stroke="#5a6068" stroke-width="2"/></g>
+        <g class="wheel"><circle cx="140" cy="60" r="17" fill="#0c0d0e" stroke="#3a3d40" stroke-width="3.5"/><circle cx="140" cy="60" r="6.5" fill="#15171a" stroke="#e0564f" stroke-width="1.6"/><path d="M140 46.5V54 M140 66V73.5 M126.5 60H134 M146 60H153.5" stroke="#5a6068" stroke-width="2"/></g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="garage-overlay">
+    <div class="section-label">Le garage</div>
+    <h2 class="section-title">Atelier<br><span style="color:var(--accent)">mécanique</span></h2>
+    <p class="section-sub">Un atelier équipé pour le diagnostic et la reprogrammation. Vos véhicules entrent en baie, repartent optimisés.</p>
   </div>
 </section>
 
