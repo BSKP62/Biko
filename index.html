@@ -367,6 +367,36 @@
     @media (prefers-reduced-motion: reduce) {
       .fx-tilt, .fx-glare, .fx-edge, .fx-tilt .fx-pop { transition: none !important; transform: none !important; }
     }
+
+    /* ===== ATELIER EN APESANTEUR (pièces flottantes interactives) ===== */
+    #antigravity {
+      position: relative; overflow: hidden; border-top: 1px solid var(--border);
+      min-height: 620px; padding: 110px 72px;
+      background: radial-gradient(130% 100% at 50% -10%, #15171b 0%, var(--black) 68%);
+    }
+    .ag-field { position: absolute; inset: 0; z-index: 1; }
+    .ag-part {
+      position: absolute; top: 0; left: 0; display: block;
+      will-change: transform; color: var(--accent); cursor: grab;
+      touch-action: none; user-select: none; -webkit-user-select: none;
+      filter: drop-shadow(0 12px 22px rgba(0,0,0,.6));
+      transition: filter .25s ease;
+    }
+    .ag-part:hover { filter: drop-shadow(0 0 14px rgba(232,160,32,.55)) drop-shadow(0 12px 22px rgba(0,0,0,.6)); }
+    .ag-part:active { cursor: grabbing; }
+    .ag-part svg { display: block; width: 100%; height: 100%; }
+    .ag-overlay { position: relative; z-index: 2; pointer-events: none; max-width: 600px; }
+    .ag-overlay .section-sub { max-width: 470px; }
+    .ag-hint {
+      margin-top: 24px; font-family: 'IBM Plex Mono', monospace; font-size: .62rem;
+      letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+      display: inline-flex; align-items: center; gap: 9px;
+    }
+    .ag-hint::before {
+      content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+      box-shadow: 0 0 10px var(--accent); animation: blink 1.4s infinite;
+    }
+    @media (max-width: 960px) { #antigravity { padding: 64px 20px; min-height: 540px; } }
   </style>
 </head>
 <body>
@@ -842,6 +872,17 @@
       <div class="ps-title">Rapport & conseil</div>
       <p class="ps-desc">Rapport complet remis le jour même. Explications claires et préconisations pour la suite des interventions.</p>
     </div>
+  </div>
+</section>
+
+<!-- ATELIER EN APESANTEUR (antigravité interactive) -->
+<section id="antigravity">
+  <div class="ag-field" id="ag-field"></div>
+  <div class="ag-overlay">
+    <div class="section-label">Atelier zéro gravité</div>
+    <h2 class="section-title">Pièces en<br><span style="color:var(--accent)">apesanteur</span></h2>
+    <p class="section-sub">Engrenages, pistons, turbos et capteurs flottent en gravité zéro. Bougez la souris pour les repousser — ou attrapez une pièce et lancez-la.</p>
+    <div class="ag-hint">Déplacez les pièces avec la souris</div>
   </div>
 </section>
 
@@ -1329,6 +1370,144 @@
       heroContent.style.transform = 'translateY(-50%) translate3d(' + (dx * 14) + 'px,' + (dy * 10) + 'px,0)';
     }, { passive: true });
   }
+})();
+</script>
+
+<!-- ============================================================= -->
+<!-- ATELIER EN APESANTEUR : pièces auto flottantes (gravité zéro) -->
+<!-- repoussées par la souris, attrapables et lançables -->
+<!-- ============================================================= -->
+<script>
+(function () {
+  var field = document.getElementById('ag-field');
+  if (!field) return;
+  var reduce = !document.documentElement.classList.contains('fx-3d');
+
+  // Jeu d'icônes "pièces auto" (stroke = currentColor)
+  var ICONS = [
+    /* engrenage */ '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3.2M12 18.8V22M2 12h3.2M18.8 12H22M4.9 4.9l2.3 2.3M16.8 16.8l2.3 2.3M19.1 4.9l-2.3 2.3M7.2 16.8l-2.3 2.3"/></svg>',
+    /* piston */ '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="8.5" rx="1"/><path d="M9 11v3.5M15 11v3.5M8 14.5h8l-1 7h-6z"/></svg>',
+    /* bougie */ '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M10 2.5h4v3.5h-4zM9.2 6h5.6v3l-1 2h-3.6l-1-2zM10.2 13h3.6v5h-3.6zM12 18v3.5"/></svg>',
+    /* écrou hex */ '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><polygon points="6,3.5 18,3.5 23,12 18,20.5 6,20.5 1,12"/><circle cx="12" cy="12" r="4"/></svg>',
+    /* disque de frein */ '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4"/><circle cx="12" cy="6.4" r="1"/><circle cx="16.8" cy="9.4" r="1"/><circle cx="16.8" cy="14.6" r="1"/><circle cx="12" cy="17.6" r="1"/><circle cx="7.2" cy="14.6" r="1"/><circle cx="7.2" cy="9.4" r="1"/></svg>',
+    /* roue/jante */ '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.6"/><path d="M12 3v3.2M12 17.8V21M3 12h3.2M17.8 12H21M5.6 5.6l2.2 2.2M16.2 16.2l2.2 2.2M5.6 18.4l2.2-2.2M16.2 7.8l2.2-2.2"/></svg>',
+    /* clé */ '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M14.8 6.2a4 4 0 0 0-5.3 5.1L3 17.8 6.2 21l6.5-6.5a4 4 0 0 0 5.1-5.3l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>',
+    /* turbo */ '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M21 12a9 9 0 1 1-9-9"/><circle cx="12" cy="12" r="3.4"/><path d="M12 3a9 9 0 0 1 9 9h-4.2"/></svg>',
+    /* goutte huile */ '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3c3.8 4.8 5.6 7.7 5.6 10.6a5.6 5.6 0 0 1-11.2 0C6.4 10.7 8.2 7.8 12 3z"/></svg>',
+    /* manomètre */ '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3.5 14a8.5 8.5 0 0 1 17 0"/><path d="M12 14l4.2-3"/><circle cx="12" cy="14" r="1.2"/></svg>',
+    /* prise OBD */ '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M5 4h14v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/><path d="M9 14v3a3 3 0 0 0 6 0v-3"/><path d="M8.5 7v2M12 7v2M15.5 7v2"/></svg>'
+  ];
+  var COLORS = ['var(--accent)', 'var(--accent2)', 'var(--blue)', 'var(--green)', 'var(--muted)'];
+
+  var rect = field.getBoundingClientRect();
+  function measure() { rect = field.getBoundingClientRect(); }
+  window.addEventListener('resize', function () { measure(); reflow(); }, { passive: true });
+  window.addEventListener('scroll', measure, { passive: true });
+
+  function rand(a, b) { return a + Math.random() * (b - a); }
+  var N = window.innerWidth < 700 ? 8 : 14;
+  var parts = [];
+
+  function build() {
+    for (var i = 0; i < N; i++) {
+      var size = rand(38, 92);
+      var el = document.createElement('div');
+      el.className = 'ag-part';
+      el.style.width = size + 'px';
+      el.style.height = size + 'px';
+      el.style.color = COLORS[i % COLORS.length];
+      el.style.opacity = (0.5 + Math.random() * 0.5).toFixed(2);
+      el.innerHTML = ICONS[i % ICONS.length];
+      field.appendChild(el);
+      var p = {
+        el: el, size: size,
+        hx: rand(size, Math.max(rect.width - size, size)),
+        hy: rand(size, Math.max(rect.height - size, size)),
+        x: 0, y: 0, vx: 0, vy: 0,
+        rot: rand(0, 360), vrot: rand(-0.5, 0.5),
+        ph: rand(0, Math.PI * 2), amp: rand(7, 20), spd: rand(0.35, 1.05),
+        drag: false
+      };
+      p.x = p.hx; p.y = p.hy;
+      parts.push(p);
+      attachDrag(p);
+    }
+  }
+  function reflow() {
+    parts.forEach(function (p) {
+      p.hx = Math.min(Math.max(p.hx, p.size), Math.max(rect.width - p.size, p.size));
+      p.hy = Math.min(Math.max(p.hy, p.size), Math.max(rect.height - p.size, p.size));
+    });
+  }
+
+  // Souris (coordonnées relatives au champ)
+  var mx = -9999, my = -9999, hasMouse = false;
+  window.addEventListener('pointermove', function (e) {
+    mx = e.clientX - rect.left; my = e.clientY - rect.top; hasMouse = true;
+  }, { passive: true });
+  field.addEventListener('pointerleave', function () { hasMouse = false; });
+
+  // Attraper / lancer une pièce
+  function attachDrag(p) {
+    var lastPX = 0, lastPY = 0, dDX = 0, dDY = 0;
+    p.el.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      measure();
+      p.drag = true;
+      try { p.el.setPointerCapture(e.pointerId); } catch (err) {}
+      var px = e.clientX - rect.left, py = e.clientY - rect.top;
+      dDX = px - p.x; dDY = py - p.y; lastPX = px; lastPY = py;
+      p.el.style.zIndex = 50;
+    });
+    p.el.addEventListener('pointermove', function (e) {
+      if (!p.drag) return;
+      var px = e.clientX - rect.left, py = e.clientY - rect.top;
+      p.x = px - dDX; p.y = py - dDY;
+      p.vx = px - lastPX; p.vy = py - lastPY;   // vitesse -> élan au lâcher
+      lastPX = px; lastPY = py;
+    });
+    function release() { if (p.drag) { p.drag = false; p.el.style.zIndex = ''; } }
+    p.el.addEventListener('pointerup', release);
+    p.el.addEventListener('pointercancel', release);
+  }
+
+  var REPEL = 160, K = 0.011, DAMP = 0.9, t0 = performance.now();
+  function render(p) {
+    p.el.style.transform = 'translate3d(' + (p.x - p.size / 2).toFixed(1) + 'px,' + (p.y - p.size / 2).toFixed(1) + 'px,0) rotate(' + p.rot.toFixed(1) + 'deg)';
+  }
+  function frame(now) {
+    var t = (now - t0) / 1000;
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i];
+      if (!p.drag) {
+        // Lévitation + rappel élastique vers la position d'origine
+        var tx = p.hx + Math.sin(t * p.spd + p.ph) * p.amp;
+        var ty = p.hy + Math.cos(t * p.spd * 0.8 + p.ph) * p.amp;
+        p.vx += (tx - p.x) * K;
+        p.vy += (ty - p.y) * K;
+        // Répulsion par la souris
+        if (hasMouse) {
+          var dx = p.x - mx, dy = p.y - my, d = Math.hypot(dx, dy);
+          if (d < REPEL && d > 0.01) {
+            var f = 1 - d / REPEL;
+            p.vx += (dx / d) * f * f * 6.5;
+            p.vy += (dy / d) * f * f * 6.5;
+          }
+        }
+        p.vx *= DAMP; p.vy *= DAMP;
+        p.x += p.vx; p.y += p.vy;
+        p.rot += p.vrot;
+      } else {
+        p.rot += (p.vx) * 0.4;   // tourne pendant qu'on la traîne
+      }
+      render(p);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  measure(); build();
+  if (reduce) { parts.forEach(render); }   // version statique
+  else requestAnimationFrame(frame);
 })();
 </script>
 
