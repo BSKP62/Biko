@@ -85,10 +85,10 @@
     /* 3D glitch fills the whole hero */
     .glitch-stage { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
     #glitch-canvas { width: 100%; height: 100%; display: block; }
-    .glitch-stage::after { /* faint scanline texture over the canvas */
+    .glitch-stage::after { /* soft radial vignette over the fluid canvas */
       content: ''; position: absolute; inset: 0; pointer-events: none;
-      background: repeating-linear-gradient(0deg, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.10) 3px);
-      mix-blend-mode: multiply; opacity: .5;
+      background: radial-gradient(120% 120% at 72% 42%, rgba(8,8,9,0) 38%, rgba(8,8,9,.55) 100%);
+      opacity: .9;
     }
     /* legibility scrims */
     .hero-scrim { position: absolute; inset: 0; z-index: 2; pointer-events: none;
@@ -1309,7 +1309,8 @@
 </footer>
 
 <!-- ============================================================= -->
-<!-- 3D GLITCH ENGINE (Three.js) — rendu ECU déformé + post glitch -->
+<!-- HERO FLUID ENGINE (Three.js) — flux iridescent piloté curseur -->
+<!-- inspiré de exp-gemini.lusion.co                                -->
 <!-- ============================================================= -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -1322,196 +1323,127 @@
 
   var renderer;
   try {
-    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: false, alpha: false, powerPreference: 'high-performance' });
   } catch (e) { stage.style.display = 'none'; return; }
 
-  var DPR = Math.min(window.devicePixelRatio || 1, 1.6);
+  var DPR = Math.min(window.devicePixelRatio || 1, 1.5);
   renderer.setPixelRatio(DPR);
-  renderer.setClearColor(0x0d0e0f, 1);
+  renderer.setClearColor(0x070708, 1);
 
-  // ---- Main 3D scene (the "ECU" object) ----
+  // ---- Fullscreen quad : flux iridescent façon Gemini ----
   var scene = new THREE.Scene();
-  var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-  camera.position.set(0, 0, 4.6);
+  var camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-  var meshUniforms = {
-    uTime:  { value: 0 },
-    uHover: { value: 0 },                        // 0 = calme, 1 = glitch max (piloté souris)
-    uColA:  { value: new THREE.Color(0xe8a020) }, // orange
-    uColB:  { value: new THREE.Color(0xff5e1a) }, // hot orange
-    uColC:  { value: new THREE.Color(0x4fc3f7) }  // cyan
+  var uniforms = {
+    uTime:    { value: 0 },
+    uRes:     { value: new THREE.Vector2(1, 1) },
+    uMouse:   { value: new THREE.Vector2(0.66, 0.5) },  // position lissée (0..1)
+    uVel:     { value: 0 },                              // énergie du curseur 0..1
+    // palette iridescente — bleu / violet / magenta + accents de la marque
+    uBlue:    { value: new THREE.Color(0x2f6bf0) },
+    uPurple:  { value: new THREE.Color(0x8b3bf0) },
+    uMagenta: { value: new THREE.Color(0xf0357a) },
+    uCyan:    { value: new THREE.Color(0x4fc3f7) },  // --blue de la marque
+    uAmber:   { value: new THREE.Color(0xe8a020) }   // --accent de la marque
   };
 
-  var meshVertex = [
+  var vert = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position,1.0); }';
+
+  var frag = [
+    'precision highp float;',
     'uniform float uTime;',
-    'uniform float uHover;',
-    'varying vec3 vNormal;',
-    'varying vec3 vPos;',
-    'varying float vGlitch;',
-    'float hash(float n){ return fract(sin(n)*43758.5453123); }',
-    'float noise(vec3 x){',
-    '  vec3 p=floor(x); vec3 f=fract(x); f=f*f*(3.0-2.0*f);',
-    '  float n=p.x+p.y*57.0+113.0*p.z;',
-    '  return mix(mix(mix(hash(n),hash(n+1.0),f.x),mix(hash(n+57.0),hash(n+58.0),f.x),f.y),',
-    '             mix(mix(hash(n+113.0),hash(n+114.0),f.x),mix(hash(n+170.0),hash(n+171.0),f.x),f.y),f.z);',
-    '}',
-    'void main(){',
-    '  vNormal = normalize(normalMatrix * normal);',
-    '  vec3 pos = position;',
-    '  float n = noise(position*1.6 + uTime*0.6);',
-    '  pos += normal * (n-0.5) * (0.10 + uHover*0.45);',           // respiration douce -> forte au survol
-    '  float band = floor(position.y * 7.0);',
-    '  float t = floor(uTime * (6.0 + uHover*16.0));',
-    '  float thr = mix(0.93, 0.55, uHover);',                       // peu de bandes au repos, beaucoup au survol
-    '  float g = step(thr, hash(band*13.0 + t));',
-    '  float shift = (hash(band*7.0 + t) - 0.5) * (0.4 + uHover*2.4) * g;',
-    '  pos.x += shift;',
-    '  pos.z += shift * 0.4;',
-    '  vGlitch = g;',
-    '  vPos = pos;',
-    '  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos,1.0);',
-    '}'
-  ].join('\n');
-
-  var meshFragment = [
-    'uniform float uTime;',
-    'uniform float uHover;',
-    'uniform vec3 uColA; uniform vec3 uColB; uniform vec3 uColC;',
-    'varying vec3 vNormal;',
-    'varying vec3 vPos;',
-    'varying float vGlitch;',
-    'void main(){',
-    '  vec3 viewDir = vec3(0.0,0.0,1.0);',
-    '  float fres = pow(1.0 - abs(dot(normalize(vNormal), viewDir)), 2.2);',
-    '  vec3 col = mix(uColA, uColB, fres);',
-    '  float scan = 0.5 + 0.5*sin(vPos.y*42.0 + uTime*5.0);',
-    '  col += uColA * scan * 0.18;',
-    '  col = mix(col, uColC, vGlitch*(0.45 + uHover*0.4));',
-    '  float a = fres*0.95 + 0.10 + vGlitch*0.35;',
-    '  gl_FragColor = vec4(col, a);',
-    '}'
-  ].join('\n');
-
-  var meshMat = new THREE.ShaderMaterial({
-    uniforms: meshUniforms,
-    vertexShader: meshVertex,
-    fragmentShader: meshFragment,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
-
-  var geo = new THREE.TorusKnotGeometry(1.05, 0.36, 240, 36, 2, 3);
-  var mesh = new THREE.Mesh(geo, meshMat);
-  mesh.scale.setScalar(1.35);
-  scene.add(mesh);
-
-  // group that holds the 3D object so we can offset it to the right of the screen
-  var group = new THREE.Group();
-  scene.add(group);
-  group.add(mesh);
-
-  // subtle wireframe core for structure
-  var wireMat = new THREE.MeshBasicMaterial({ color: 0xe8a020, wireframe: true, transparent: true, opacity: 0.07 });
-  var wire = new THREE.Mesh(new THREE.IcosahedronGeometry(0.7, 1), wireMat);
-  group.add(wire);
-
-  // extra rotating ring for depth
-  var ringMat = new THREE.MeshBasicMaterial({ color: 0xff5e1a, wireframe: true, transparent: true, opacity: 0.10 });
-  var ring = new THREE.Mesh(new THREE.TorusGeometry(2.1, 0.02, 8, 90), ringMat);
-  group.add(ring);
-
-  // floating debris particles
-  var pCount = 380;
-  var pGeo = new THREE.BufferGeometry();
-  var pPos = new Float32Array(pCount * 3);
-  for (var i = 0; i < pCount; i++) {
-    var r = 1.6 + Math.random() * 1.6;
-    var th = Math.random() * Math.PI * 2;
-    var ph = Math.acos(2 * Math.random() - 1);
-    pPos[i*3]   = r * Math.sin(ph) * Math.cos(th);
-    pPos[i*3+1] = r * Math.sin(ph) * Math.sin(th);
-    pPos[i*3+2] = r * Math.cos(ph);
-  }
-  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-  var pMat = new THREE.PointsMaterial({ color: 0xe8a020, size: 0.018, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
-  var points = new THREE.Points(pGeo, pMat);
-  scene.add(points);
-
-  // ---- Render target + post-process glitch pass ----
-  var rt = new THREE.WebGLRenderTarget(2, 2, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat });
-
-  var postScene = new THREE.Scene();
-  var postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-  var postUniforms = {
-    uScene: { value: rt.texture },
-    uTime:  { value: 0 },
-    uHover: { value: 0 }
-  };
-  var postVertex = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position,1.0); }';
-  var postFragment = [
-    'uniform sampler2D uScene;',
-    'uniform float uTime;',
-    'uniform float uHover;',
+    'uniform vec2  uRes;',
+    'uniform vec2  uMouse;',
+    'uniform float uVel;',
+    'uniform vec3  uBlue; uniform vec3 uPurple; uniform vec3 uMagenta; uniform vec3 uCyan; uniform vec3 uAmber;',
     'varying vec2 vUv;',
-    'float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }',
+    '',
+    'float hash(vec2 p){ p = fract(p*vec2(123.34,345.45)); p += dot(p,p+34.345); return fract(p.x*p.y); }',
+    'float noise(vec2 p){',
+    '  vec2 i = floor(p), f = fract(p);',
+    '  float a = hash(i), b = hash(i+vec2(1.0,0.0)), c = hash(i+vec2(0.0,1.0)), d = hash(i+vec2(1.0,1.0));',
+    '  vec2 u = f*f*(3.0-2.0*f);',
+    '  return mix(mix(a,b,u.x), mix(c,d,u.x), u.y);',
+    '}',
+    'float fbm(vec2 p){',
+    '  float v = 0.0, a = 0.5;',
+    '  mat2 m = mat2(1.6,1.2,-1.2,1.6);',
+    '  for(int i=0;i<5;i++){ v += a*noise(p); p = m*p; a *= 0.5; }',
+    '  return v;',
+    '}',
+    '',
     'void main(){',
-    '  vec2 uv = vUv;',
-    '  float t = floor(uTime*(8.0 + uHover*22.0));',
-    '  float band = floor(uv.y*(14.0 + uHover*30.0));',
-    '  float r = hash(vec2(band, t));',
-    '  float active = step(mix(0.96, 0.72, uHover), r);',          // déchirures rares au repos, nombreuses au survol
-    '  float disp = (hash(vec2(band, t+1.0))-0.5)*(0.02 + uHover*0.10)*active;',
-    '  uv.x += disp;',
-    '  float amt = 0.0015 + uHover*0.006 + active*(0.004 + uHover*0.016);',  // aberration chromatique
-    '  float cr = texture2D(uScene, uv + vec2(amt,0.0)).r;',
-    '  float cg = texture2D(uScene, uv).g;',
-    '  float cb = texture2D(uScene, uv - vec2(amt,0.0)).b;',
-    '  vec3 col = vec3(cr,cg,cb);',
-    '  col *= 0.84 + 0.16*sin(uv.y*180.0);',                        // scanlines
-    '  float roll = sin((uv.y - uTime*0.13)*6.28318);',
-    '  col += vec3(0.91,0.63,0.13) * pow(max(roll,0.0),10.0)*0.16;', // balayage scan
-    '  col += (hash(uv*(uTime+1.0))-0.5)*(0.03 + uHover*0.05);',     // grain
-    '  vec2 c = uv-0.5; col *= 1.0 - dot(c,c)*0.70;',                // vignette
-    '  gl_FragColor = vec4(col,1.0);',
+    '  float asp = uRes.x / max(uRes.y,1.0);',
+    '  vec2 p = vUv; p.x *= asp;',
+    '  vec2 m = uMouse; m.x *= asp;',
+    '  float t = uTime * 0.045;',
+    '',
+    '  // influence du curseur : halo doux + énergie du déplacement',
+    '  vec2 toM = p - m;',
+    '  float md = length(toM);',
+    '  float infl = (0.35 + 0.65*uVel) * exp(-md*md*3.2);',
+    '',
+    '  // domain warping (flux liquide)',
+    '  vec2 q = vec2(fbm(p*1.6 + t), fbm(p*1.6 + vec2(5.2,1.3) - t));',
+    '  vec2 r = vec2(',
+    '    fbm(p*1.6 + 2.2*q + vec2(1.7,9.2) + t*0.9 + toM*infl*5.0),',
+    '    fbm(p*1.6 + 2.2*q + vec2(8.3,2.8) - t*0.7 + toM*infl*5.0)',
+    '  );',
+    '  float f = fbm(p*1.6 + 2.6*r);',
+    '  float fl = length(r);',
+    '',
+    '  // teinte iridescente : on parcourt la palette selon le flux',
+    '  vec3 col = mix(uBlue, uPurple, smoothstep(0.15,0.6,f));',
+    '  col = mix(col, uMagenta, smoothstep(0.45,0.9, f + 0.35*r.x));',
+    '  col = mix(col, uCyan, clamp(0.55*fl,0.0,0.5));',
+    '  // filaments lumineux iridescents',
+    '  float fil = pow(smoothstep(0.55,0.95,f), 3.0);',
+    '  col += mix(uCyan, uMagenta, r.y) * fil * 0.6;',
+    '  // accent ambré de la marque autour du curseur + crêtes vives',
+    '  col = mix(col, uAmber, clamp(infl*0.9 + fil*0.25, 0.0, 0.85));',
+    '',
+    '  // contraste + fondu vers le noir profond du site',
+    '  float lum = smoothstep(0.05, 0.72, f*0.8 + fl*0.25 + infl*0.5);',
+    '  col *= 0.45 + 0.95*lum;',
+    '  col = mix(vec3(0.027,0.027,0.031), col, lum);',
+    '  // glow direct au curseur',
+    '  col += uAmber * exp(-md*md*9.0) * uVel * 0.5;',
+    '',
+    '  // grain + vignette',
+    '  col += (hash(vUv*(uTime+1.0)) - 0.5) * 0.025;',
+    '  vec2 c = vUv - 0.5; col *= 1.0 - dot(c,c)*0.55;',
+    '  gl_FragColor = vec4(max(col,0.0), 1.0);',
     '}'
   ].join('\n');
-  var postMat = new THREE.ShaderMaterial({ uniforms: postUniforms, vertexShader: postVertex, fragmentShader: postFragment, depthTest: false, depthWrite: false });
-  var postQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMat);
-  postScene.add(postQuad);
+
+  var mat = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: vert, fragmentShader: frag, depthTest: false, depthWrite: false });
+  var quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
+  scene.add(quad);
 
   // ---- Sizing ----
-  var offsetX = 0;
   function resize() {
     var w = Math.max(stage.clientWidth, 1);
     var h = Math.max(stage.clientHeight, 1);
     renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    rt.setSize(Math.floor(w * DPR), Math.floor(h * DPR));
-    // décale l'objet vers la droite sur grand écran, centré sur mobile
-    offsetX = (w > 820) ? 1.25 : 0.0;
-    camera.position.z = (w > 820) ? 4.6 : 5.6;
+    uniforms.uRes.value.set(w * DPR, h * DPR);
   }
   resize();
   if (window.ResizeObserver) { new ResizeObserver(resize).observe(stage); }
   else { window.addEventListener('resize', resize); }
 
-  // ---- Pointer drives glitch intensity (via mouse SPEED) ----
-  var tx = 0, ty = 0, cx = 0, cy = 0;       // parallaxe
+  // ---- Pointer : position cible + énergie via la vitesse ----
+  var mx = 0.66, my = 0.5;                 // position cible (0..1, y inversé pour le shader)
   var lastX = null, lastY = null, lastT = 0;
-  var targetHover = 0, hover = 0;
+  var targetVel = 0;
   function onMove(e) {
     var rect = stage.getBoundingClientRect();
-    var nx = (e.clientX - rect.left) / rect.width;
-    var ny = (e.clientY - rect.top) / rect.height;
-    tx = (nx - 0.5) * 0.7;
-    ty = (ny - 0.5) * 0.7;
+    mx = (e.clientX - rect.left) / rect.width;
+    my = 1.0 - (e.clientY - rect.top) / rect.height;
     var now = performance.now();
     if (lastX !== null) {
       var dt = Math.max(now - lastT, 16);
       var speed = Math.hypot(e.clientX - lastX, e.clientY - lastY) / dt; // px/ms
-      targetHover = Math.min(1.0, targetHover + speed * 0.9);            // un mouvement rapide => gros glitch
+      targetVel = Math.min(1.0, targetVel + speed * 0.7);
     }
     lastX = e.clientX; lastY = e.clientY; lastT = now;
   }
@@ -1520,44 +1452,25 @@
 
   // ---- Loop ----
   var clock = new THREE.Clock();
+  var sx = 0.66, sy = 0.5, vel = 0;
   function frame() {
     var t = clock.getElapsedTime();
 
-    // décroissance du glitch quand la souris ne bouge plus + base calme
-    targetHover *= 0.92;
-    var idle = 0.10 + 0.05 * Math.sin(t * 0.7);     // légère vie au repos
-    hover += ((Math.max(targetHover, idle)) - hover) * 0.12;
+    targetVel *= 0.93;                                  // l'énergie retombe quand on s'arrête
+    var idle = 0.12 + 0.06 * Math.sin(t * 0.6);         // léger souffle au repos
+    vel += (Math.max(targetVel, idle) - vel) * 0.08;
+    sx += (mx - sx) * 0.06;                             // suivi lissé du curseur
+    sy += (my - sy) * 0.06;
 
-    meshUniforms.uTime.value = t;  meshUniforms.uHover.value = hover;
-    postUniforms.uTime.value = t;  postUniforms.uHover.value = hover;
+    uniforms.uTime.value = t;
+    uniforms.uMouse.value.set(sx, sy);
+    uniforms.uVel.value = vel;
 
-    cx += (tx - cx) * 0.05;
-    cy += (ty - cy) * 0.05;
-
-    group.position.x = offsetX;
-    mesh.rotation.y = t * 0.45 + cx;
-    mesh.rotation.x = t * 0.20 + cy;
-    wire.rotation.y = -t * 0.3;
-    wire.rotation.z = t * 0.18;
-    ring.rotation.x = t * 0.25;
-    ring.rotation.y = t * 0.12;
-    points.rotation.y = t * 0.05;
-
-    camera.position.x = cx * 0.9;
-    camera.position.y = -cy * 0.9;
-    camera.lookAt(offsetX * 0.5, 0, 0);
-
-    renderer.setRenderTarget(rt);
-    renderer.clear();
     renderer.render(scene, camera);
-
-    renderer.setRenderTarget(null);
-    renderer.render(postScene, postCam);
-
     if (!reduce) requestAnimationFrame(frame);
   }
 
-  if (reduce) { meshUniforms.uTime.value = 2.0; postUniforms.uTime.value = 2.0; hover = 0.25; meshUniforms.uHover.value = postUniforms.uHover.value = hover; frame(); }
+  if (reduce) { uniforms.uTime.value = 6.0; vel = 0.18; uniforms.uVel.value = vel; uniforms.uMouse.value.set(sx, sy); renderer.render(scene, camera); }
   else requestAnimationFrame(frame);
 
   // ---- Nav: transparent over hero, solid on scroll ----
