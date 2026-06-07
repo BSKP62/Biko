@@ -1339,12 +1339,12 @@
     uRes:     { value: new THREE.Vector2(1, 1) },
     uMouse:   { value: new THREE.Vector2(0.66, 0.5) },  // position lissée (0..1)
     uVel:     { value: 0 },                              // énergie du curseur 0..1
-    // palette iridescente — bleu / violet / magenta + accents de la marque
-    uBlue:    { value: new THREE.Color(0x2f6bf0) },
-    uPurple:  { value: new THREE.Color(0x8b3bf0) },
-    uMagenta: { value: new THREE.Color(0xf0357a) },
-    uCyan:    { value: new THREE.Color(0x4fc3f7) },  // --blue de la marque
-    uAmber:   { value: new THREE.Color(0xe8a020) }   // --accent de la marque
+    // palette iridescente Gemini — bleu profond / indigo / violet / rose
+    uBlue:    { value: new THREE.Color(0x1e63f0) },
+    uPurple:  { value: new THREE.Color(0x6d3df2) },
+    uMagenta: { value: new THREE.Color(0xe246b4) },
+    uCyan:    { value: new THREE.Color(0x49d6f7) },  // cyan lumineux
+    uAmber:   { value: new THREE.Color(0xe8a020) }   // --accent marque (touche au curseur)
   };
 
   var vert = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position,1.0); }';
@@ -1399,8 +1399,10 @@
     '  // filaments lumineux iridescents',
     '  float fil = pow(smoothstep(0.55,0.95,f), 3.0);',
     '  col += mix(uCyan, uMagenta, r.y) * fil * 0.6;',
-    '  // accent ambré de la marque autour du curseur + crêtes vives',
-    '  col = mix(col, uAmber, clamp(infl*0.9 + fil*0.25, 0.0, 0.85));',
+    '  // crêtes vives en rose iridescent (corps 100% Gemini)',
+    '  col = mix(col, uMagenta, fil*0.35);',
+    '  // touche ambrée de la marque, seulement autour du curseur',
+    '  col = mix(col, uAmber, clamp(infl*0.75, 0.0, 0.6));',
     '',
     '  // contraste + fondu vers le noir profond du site',
     '  float lum = smoothstep(0.05, 0.72, f*0.8 + fl*0.25 + infl*0.5);',
