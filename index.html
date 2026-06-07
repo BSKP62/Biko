@@ -492,8 +492,70 @@
       box-shadow: 0 0 10px var(--accent); animation: blink 1.4s infinite; }
     @media (max-width: 960px) { #showroom { min-height: 72vh; } .showroom-ui { padding: 50px 20px; } }
   </style>
+
+  <!-- ===== COUCHE EXPERTE : préchargeur diagnostic, progression, curseur technique ===== -->
+  <style id="bsk-expert-fx">
+    /* Barre de progression de défilement */
+    #bsk-progress{position:fixed;top:0;left:0;height:2px;width:0;z-index:300;
+      background:linear-gradient(90deg,var(--accent),var(--accent2));
+      box-shadow:0 0 12px rgba(232,160,32,.55);pointer-events:none;will-change:width;}
+
+    /* Préchargeur — séquence de boot ECU */
+    #bsk-boot{position:fixed;inset:0;z-index:1000;
+      background:radial-gradient(120% 90% at 50% 38%,#15171b 0%,#0a0a0a 72%);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;
+      font-family:'IBM Plex Mono',monospace;
+      transition:opacity .6s ease,visibility .6s;
+      animation:bskBootFail 0s linear 4.2s forwards;}      /* filet de sécurité si le JS échoue */
+    #bsk-boot.done{opacity:0;visibility:hidden;}
+    @keyframes bskBootFail{to{opacity:0;visibility:hidden;}}
+    .bsk-boot-logo{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:clamp(2rem,5vw,2.8rem);
+      letter-spacing:.1em;text-transform:uppercase;color:var(--white);}
+    .bsk-boot-logo span{color:var(--accent);}
+    .bsk-boot-log{width:min(360px,82vw);font-size:.66rem;letter-spacing:.05em;color:var(--muted);
+      min-height:96px;line-height:2;}
+    .bsk-boot-log b{color:var(--green);font-weight:500;}
+    .bsk-boot-bar{width:min(360px,82vw);height:2px;background:var(--border);position:relative;overflow:hidden;}
+    .bsk-boot-bar i{position:absolute;left:0;top:0;bottom:0;width:0;
+      background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .12s linear;}
+    .bsk-boot-pct{font-size:.6rem;letter-spacing:.24em;color:var(--accent);}
+
+    /* Curseur technique (réticule) — uniquement pointeur fin de bureau */
+    @media (hover:hover) and (pointer:fine){
+      .bsk-cursor-on, .bsk-cursor-on *{cursor:none !important;}
+      #bsk-cur{position:fixed;top:0;left:0;width:34px;height:34px;z-index:9000;pointer-events:none;
+        border:1px solid rgba(232,160,32,.75);border-radius:50%;
+        transform:translate(-100px,-100px);will-change:transform;
+        transition:width .18s,height .18s,background .18s,border-color .18s;}
+      #bsk-cur::before,#bsk-cur::after{content:'';position:absolute;left:50%;width:1px;height:6px;
+        background:var(--accent);transform:translateX(-50%);}
+      #bsk-cur::before{top:-6px;} #bsk-cur::after{bottom:-6px;}
+      #bsk-cur.hot{width:54px;height:54px;border-color:var(--accent2);background:rgba(232,160,32,.08);}
+      #bsk-dot{position:fixed;top:0;left:0;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;z-index:9001;
+        pointer-events:none;border-radius:50%;background:var(--accent);
+        transform:translate(-100px,-100px);will-change:transform;}
+    }
+    @media (prefers-reduced-motion:reduce){
+      #bsk-boot{display:none !important;} #bsk-progress{display:none;}
+    }
+  </style>
 </head>
 <body>
+
+<!-- Barre de progression de défilement -->
+<div id="bsk-progress"></div>
+
+<!-- Préchargeur : séquence de diagnostic ECU -->
+<div id="bsk-boot" role="status" aria-label="Initialisation du système">
+  <div class="bsk-boot-logo">Bsk<span>shop</span></div>
+  <div class="bsk-boot-log" id="bsk-boot-log"></div>
+  <div class="bsk-boot-bar"><i id="bsk-boot-fill"></i></div>
+  <div class="bsk-boot-pct" id="bsk-boot-pct">0%</div>
+</div>
+
+<!-- Curseur technique -->
+<div id="bsk-cur" aria-hidden="true"></div>
+<div id="bsk-dot" aria-hidden="true"></div>
 
 <!-- NAV -->
 <nav>
@@ -2040,6 +2102,117 @@
     renderer.render(scene, camera);
   }
   frame();
+})();
+</script>
+
+<!-- ============================================================= -->
+<!-- COUCHE EXPERTE : boot diagnostic, progression, compteurs, curseur -->
+<!-- ============================================================= -->
+<script>
+(function () {
+  var reduce = !document.documentElement.classList.contains('fx-3d');
+
+  /* ---------- 1. BARRE DE PROGRESSION ---------- */
+  var bar = document.getElementById('bsk-progress');
+  if (bar) {
+    var tick = false;
+    function updBar() {
+      tick = false;
+      var h = document.documentElement;
+      var max = (h.scrollHeight - h.clientHeight) || 1;
+      bar.style.width = (Math.min(1, (h.scrollTop || document.body.scrollTop) / max) * 100).toFixed(2) + '%';
+    }
+    window.addEventListener('scroll', function () { if (!tick) { tick = true; requestAnimationFrame(updBar); } }, { passive: true });
+    updBar();
+  }
+
+  /* ---------- 2. SÉQUENCE DE BOOT ---------- */
+  var boot = document.getElementById('bsk-boot');
+  if (boot) {
+    if (reduce) {
+      if (boot.parentNode) boot.parentNode.removeChild(boot);
+    } else {
+      var log = document.getElementById('bsk-boot-log');
+      var fill = document.getElementById('bsk-boot-fill');
+      var pct = document.getElementById('bsk-boot-pct');
+      var lines = [
+        'INITIALISATION SYSTÈME ECU…',
+        'CONNEXION OBD-II … <b>OK</b>',
+        'LECTURE CALCULATEURS … <b>OK</b>',
+        'CHARGEMENT MOTEUR 3D … <b>OK</b>'
+      ];
+      var li = 0, html = '';
+      var ti = setInterval(function () {
+        if (li < lines.length) { html += '&gt; ' + lines[li] + '<br>'; if (log) log.innerHTML = html; li++; }
+        else clearInterval(ti);
+      }, 300);
+      var p = 0;
+      var pi = setInterval(function () {
+        p = Math.min(100, p + Math.random() * 15 + 7);
+        if (fill) fill.style.width = p + '%';
+        if (pct) pct.textContent = Math.round(p) + '%';
+        if (p >= 100) clearInterval(pi);
+      }, 110);
+      var dismissed = false;
+      function done() {
+        if (dismissed) return; dismissed = true;
+        clearInterval(ti); clearInterval(pi);
+        if (fill) fill.style.width = '100%'; if (pct) pct.textContent = '100%';
+        boot.classList.add('done');
+        setTimeout(function () { if (boot.parentNode) boot.parentNode.removeChild(boot); }, 700);
+      }
+      setTimeout(done, 1950);
+    }
+  }
+
+  /* ---------- 3. COMPTEURS ANIMÉS (stats héro) ---------- */
+  function countUp(el) {
+    var orig = el.innerHTML;
+    var m = orig.match(/\d+/); if (!m) return;
+    var target = parseInt(m[0], 10), dur = 1300, t0 = null;
+    function step(ts) {
+      if (!t0) t0 = ts;
+      var k = Math.min(1, (ts - t0) / dur);
+      var e = 1 - Math.pow(1 - k, 3);
+      el.innerHTML = orig.replace(/\d+/, Math.round(target * e));
+      if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  var stats = document.querySelectorAll('#hero .stat-num');
+  if (stats.length && !reduce && 'IntersectionObserver' in window) {
+    var so = new IntersectionObserver(function (en) {
+      en.forEach(function (x) { if (x.isIntersecting) { countUp(x.target); so.unobserve(x.target); } });
+    }, { threshold: 0.4 });
+    stats.forEach(function (s) { so.observe(s); });
+  }
+
+  /* ---------- 4. CURSEUR TECHNIQUE ---------- */
+  var fine = window.matchMedia && window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+  var cur = document.getElementById('bsk-cur'), dot = document.getElementById('bsk-dot');
+  if (fine && cur && dot) {
+    document.documentElement.classList.add('bsk-cursor-on');
+    var lerp = reduce ? 1 : 0.2;
+    var cx = window.innerWidth / 2, cy = window.innerHeight / 2, dx = cx, dy = cy;
+    window.addEventListener('pointermove', function (e) {
+      dx = e.clientX; dy = e.clientY;
+      dot.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+    }, { passive: true });
+    (function ring() {
+      cx += (dx - cx) * lerp; cy += (dy - cy) * lerp;
+      cur.style.transform = 'translate(' + (cx - 17) + 'px,' + (cy - 17) + 'px)';
+      requestAnimationFrame(ring);
+    })();
+    var HOT = 'a,button,.swatch,.service-card,.stage-card,.depoll-card,input,select,textarea,.ag-part,#car3d,.float-call,.nav-cta';
+    window.addEventListener('pointerover', function (e) {
+      if (e.target.closest && e.target.closest(HOT)) cur.classList.add('hot');
+    }, { passive: true });
+    window.addEventListener('pointerout', function (e) {
+      if (e.target.closest && e.target.closest(HOT)) cur.classList.remove('hot');
+    }, { passive: true });
+    window.addEventListener('pointerdown', function () { cur.classList.add('hot'); }, { passive: true });
+    window.addEventListener('pointerup', function () { cur.classList.remove('hot'); }, { passive: true });
+  }
 })();
 </script>
 
